@@ -35,7 +35,14 @@ echo "Installing dependencies from requirements.txt ..."
 "$PYTHON" -m pip install -r requirements.txt
 
 echo "Downloading spaCy model en_core_web_sm ..."
-"$PYTHON" -m spacy download en_core_web_sm
+# `spacy download` fails on networks that intercept TLS to
+# raw.githubusercontent.com (SSL_CERT_VERIFY_FAILED). Installing the model
+# wheel directly via pip goes through the same trusted path already used
+# for every other dependency and works everywhere `spacy download` does.
+if ! "$PYTHON" -m spacy download en_core_web_sm; then
+    echo "spacy download failed, falling back to direct pip install ..."
+    "$PYTHON" -m pip install "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
+fi
 
 if [ ! -f ".env" ]; then
     echo "Creating .env from .env.example ..."
