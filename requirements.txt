@@ -1,0 +1,25 @@
+# Pinned dependencies for resume-job-matcher (SPECIFICATION.md Section 3.2).
+#
+# Deviation from spec: spacy is pinned to 3.8.* instead of 3.7.* because this
+# project's venv runs Python 3.13, and spacy 3.7.x has no prebuilt wheel for
+# cp313 (source build fails without a full build toolchain). spacy 3.8.x is
+# API-compatible for the sentence segmentation / lemmatization / PERSON NER
+# usage this project needs and has cp313 wheels. If the environment is later
+# pinned to Python 3.11, this can be reverted to 3.7.* to match the spec
+# exactly.
+streamlit==1.37.*
+pandas==2.2.*
+pymupdf==1.24.*
+python-docx==1.1.*
+spacy==3.8.*
+scikit-learn==1.5.*
+sqlalchemy==2.0.*
+psycopg[binary]==3.2.*
+alembic==1.13.*
+pydantic==2.8.*
+pydantic-settings==2.4.*
+pyyaml==6.0.*
+python-dateutil==2.9.*
+pytest==8.3.*
+ruff==0.5.*
+black==24.*
