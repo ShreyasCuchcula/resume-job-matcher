@@ -1,0 +1,44 @@
+# Authoritative scoring configuration (SPECIFICATION.md Section 7.1).
+#
+# This file is validated at startup by config/settings.py (fail-fast):
+# weights must be non-negative and sum to exactly 1.0 (+/- 1e-9);
+# thresholds must fall in [0, 1]; label boundaries must descend. The
+# exact config in effect for a scoring run is snapshotted verbatim
+# into scoring_runs.config_snapshot for reproducibility.
+
+scoring_version: "mvp-1.0"
+
+weights: # must be >=0 and sum to exactly 1.0
+  required: 0.45
+  experience: 0.20
+  responsibility: 0.20
+  preferred: 0.15
+
+responsibility_matching:
+  minimum_similarity: 0.20 # weak-match threshold
+  role_relevance_threshold: 0.30 # avg bullet similarity for role relevance
+  ngram_min: 1
+  ngram_max: 2
+  sublinear_tf: true
+
+evidence_strength:
+  demonstrated: 1.00 # employment/project/research bullet
+  summary: 0.90
+  skills_section: 0.80
+  related_default: 0.50 # only when taxonomy explicitly approves
+
+job_parsing:
+  auto_include_confidence: 0.80 # >= -> include normally
+  review_confidence: 0.60 # >= -> include but highlight; < -> exclude until confirmed
+  min_description_chars: 100
+  max_description_chars: 50000
+
+uploads:
+  maximum_resume_mb: 10
+  allowed_extensions: [pdf, docx]
+  min_extracted_chars: 200 # below -> probable scan
+
+labels: # descriptive only, never decisions
+  strong: 85
+  good: 70
+  possible: 55
