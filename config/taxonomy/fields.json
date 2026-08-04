@@ -1,0 +1,135 @@
+{
+  "business administration": {
+    "related": [
+      "economics",
+      "business analytics"
+    ],
+    "somewhat_related": [
+      "finance",
+      "data analytics"
+    ]
+  },
+  "business analytics": {
+    "related": [
+      "data analytics",
+      "business administration"
+    ],
+    "somewhat_related": [
+      "statistics",
+      "economics"
+    ]
+  },
+  "computer science": {
+    "related": [
+      "software engineering",
+      "information technology"
+    ],
+    "somewhat_related": [
+      "mathematics",
+      "statistics",
+      "data science",
+      "information systems"
+    ]
+  },
+  "data analytics": {
+    "related": [
+      "statistics",
+      "business analytics",
+      "information systems"
+    ],
+    "somewhat_related": [
+      "economics",
+      "mathematics",
+      "business administration",
+      "data science"
+    ]
+  },
+  "data science": {
+    "related": [
+      "statistics",
+      "computer science",
+      "mathematics"
+    ],
+    "somewhat_related": [
+      "data analytics",
+      "information systems"
+    ]
+  },
+  "economics": {
+    "related": [
+      "business administration",
+      "finance"
+    ],
+    "somewhat_related": [
+      "statistics",
+      "mathematics",
+      "data analytics"
+    ]
+  },
+  "finance": {
+    "related": [
+      "economics",
+      "business administration"
+    ],
+    "somewhat_related": [
+      "data analytics"
+    ]
+  },
+  "information systems": {
+    "related": [
+      "information technology",
+      "data analytics"
+    ],
+    "somewhat_related": [
+      "computer science",
+      "business administration"
+    ]
+  },
+  "information technology": {
+    "related": [
+      "computer science",
+      "information systems"
+    ],
+    "somewhat_related": [
+      "software engineering"
+    ]
+  },
+  "mathematics": {
+    "related": [
+      "statistics",
+      "data science"
+    ],
+    "somewhat_related": [
+      "computer science",
+      "economics"
+    ]
+  },
+  "public health": {
+    "related": [
+      "statistics"
+    ],
+    "somewhat_related": [
+      "data analytics"
+    ]
+  },
+  "software engineering": {
+    "related": [
+      "computer science",
+      "information technology"
+    ],
+    "somewhat_related": [
+      "information systems"
+    ]
+  },
+  "statistics": {
+    "related": [
+      "mathematics",
+      "data science",
+      "data analytics"
+    ],
+    "somewhat_related": [
+      "computer science",
+      "economics"
+    ]
+  }
+}

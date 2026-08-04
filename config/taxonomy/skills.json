@@ -1,0 +1,1304 @@
+{
+  ".net": {
+    "aliases": [
+      "dotnet",
+      "asp.net"
+    ],
+    "category": "software framework",
+    "related_skills": {}
+  },
+  "a/b testing": {
+    "aliases": [
+      "ab testing",
+      "split testing"
+    ],
+    "category": "machine learning",
+    "related_skills": {}
+  },
+  "adobe analytics": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "google analytics": 0.5
+    }
+  },
+  "agile methodology": {
+    "aliases": [
+      "agile"
+    ],
+    "category": "project management",
+    "related_skills": {
+      "scrum": 0.6
+    }
+  },
+  "algorithm design": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {
+      "data structures and algorithms": 0.6
+    }
+  },
+  "alteryx": {
+    "aliases": [],
+    "category": "statistics tool",
+    "related_skills": {}
+  },
+  "amazon sns": {
+    "aliases": [
+      "aws sns",
+      "sns"
+    ],
+    "category": "cloud platform",
+    "related_skills": {}
+  },
+  "amazon sqs": {
+    "aliases": [
+      "aws sqs",
+      "sqs"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "message queues": 0.5
+    }
+  },
+  "amplitude": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "mixpanel": 0.5
+    }
+  },
+  "ansible": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "terraform": 0.5
+    }
+  },
+  "apache airflow": {
+    "aliases": [
+      "airflow"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "apache kafka": {
+    "aliases": [
+      "kafka"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "apache nifi": {
+    "aliases": [
+      "nifi"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "apache spark": {
+    "aliases": [
+      "spark",
+      "pyspark"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "asana": {
+    "aliases": [],
+    "category": "project management",
+    "related_skills": {
+      "jira": 0.5,
+      "trello": 0.5
+    }
+  },
+  "aws": {
+    "aliases": [
+      "amazon web services"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "azure": 0.5,
+      "gcp": 0.5
+    }
+  },
+  "aws lambda": {
+    "aliases": [
+      "lambda functions"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "serverless architecture": 0.5
+    }
+  },
+  "azure": {
+    "aliases": [
+      "microsoft azure"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "aws": 0.5,
+      "gcp": 0.5
+    }
+  },
+  "bash scripting": {
+    "aliases": [
+      "bash",
+      "shell scripting",
+      "shell script"
+    ],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "big data": {
+    "aliases": [],
+    "category": "data engineering",
+    "related_skills": {
+      "apache spark": 0.4,
+      "hadoop": 0.4
+    }
+  },
+  "bigquery": {
+    "aliases": [
+      "google bigquery"
+    ],
+    "category": "database",
+    "related_skills": {
+      "redshift": 0.5,
+      "snowflake": 0.5
+    }
+  },
+  "bootstrap": {
+    "aliases": [],
+    "category": "software framework",
+    "related_skills": {
+      "css": 0.4
+    }
+  },
+  "budgeting": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {
+      "financial modeling": 0.4
+    }
+  },
+  "business process modeling": {
+    "aliases": [
+      "business process mapping"
+    ],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "c#": {
+    "aliases": [
+      "csharp",
+      "c sharp"
+    ],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "c++": {
+    "aliases": [
+      "cpp",
+      "c plus plus"
+    ],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "caching strategies": {
+    "aliases": [
+      "caching"
+    ],
+    "category": "software engineering",
+    "related_skills": {
+      "redis": 0.4
+    }
+  },
+  "cassandra": {
+    "aliases": [
+      "apache cassandra"
+    ],
+    "category": "database",
+    "related_skills": {
+      "nosql": 0.5
+    }
+  },
+  "ci/cd": {
+    "aliases": [
+      "continuous integration",
+      "continuous deployment"
+    ],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "circleci": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "ci/cd": 0.5
+    }
+  },
+  "code review": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "computer vision": {
+    "aliases": [
+      "cv"
+    ],
+    "category": "machine learning",
+    "related_skills": {
+      "deep learning": 0.5
+    }
+  },
+  "confluence": {
+    "aliases": [],
+    "category": "project management",
+    "related_skills": {}
+  },
+  "css": {
+    "aliases": [
+      "css3"
+    ],
+    "category": "software framework",
+    "related_skills": {
+      "html": 0.5
+    }
+  },
+  "dashboarding": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "data visualization": 0.5
+    }
+  },
+  "data cataloging": {
+    "aliases": [
+      "data catalog"
+    ],
+    "category": "data engineering",
+    "related_skills": {
+      "data governance": 0.5
+    }
+  },
+  "data cleaning": {
+    "aliases": [
+      "data wrangling",
+      "data munging"
+    ],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "data governance": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "data lake": {
+    "aliases": [
+      "data lakehouse"
+    ],
+    "category": "data engineering",
+    "related_skills": {
+      "data warehousing": 0.5
+    }
+  },
+  "data lineage": {
+    "aliases": [],
+    "category": "data engineering",
+    "related_skills": {
+      "data governance": 0.5
+    }
+  },
+  "data modeling": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "data privacy compliance": {
+    "aliases": [
+      "gdpr compliance"
+    ],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "data storytelling": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "data visualization": 0.5
+    }
+  },
+  "data structures and algorithms": {
+    "aliases": [
+      "dsa"
+    ],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "data visualization": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "data warehousing": {
+    "aliases": [
+      "data warehouse design",
+      "data warehouse"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "databricks": {
+    "aliases": [],
+    "category": "data engineering",
+    "related_skills": {
+      "apache spark": 0.5
+    }
+  },
+  "datadog": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "new relic": 0.4,
+      "splunk": 0.4
+    }
+  },
+  "dbt": {
+    "aliases": [
+      "data build tool"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "debugging": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "deep learning": {
+    "aliases": [
+      "dl"
+    ],
+    "category": "machine learning",
+    "related_skills": {
+      "machine learning": 0.6
+    }
+  },
+  "distributed systems": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {
+      "big data": 0.4
+    }
+  },
+  "django": {
+    "aliases": [],
+    "category": "software framework",
+    "related_skills": {
+      "fastapi": 0.5,
+      "flask": 0.5
+    }
+  },
+  "docker": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "kubernetes": 0.5
+    }
+  },
+  "elasticsearch": {
+    "aliases": [
+      "elastic search"
+    ],
+    "category": "database",
+    "related_skills": {}
+  },
+  "etl": {
+    "aliases": [
+      "extract transform load",
+      "elt",
+      "data pipelines",
+      "data pipeline development"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "exploratory data analysis": {
+    "aliases": [
+      "eda"
+    ],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "fastapi": {
+    "aliases": [],
+    "category": "software framework",
+    "related_skills": {
+      "django": 0.5,
+      "flask": 0.5
+    }
+  },
+  "feature engineering": {
+    "aliases": [],
+    "category": "machine learning",
+    "related_skills": {
+      "data cleaning": 0.4
+    }
+  },
+  "figma": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "financial modeling": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {
+      "forecasting": 0.4
+    }
+  },
+  "flask": {
+    "aliases": [],
+    "category": "software framework",
+    "related_skills": {
+      "django": 0.5,
+      "fastapi": 0.5
+    }
+  },
+  "forecasting": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "time series analysis": 0.5
+    }
+  },
+  "gcp": {
+    "aliases": [
+      "google cloud platform",
+      "google cloud"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "aws": 0.5,
+      "azure": 0.5
+    }
+  },
+  "git": {
+    "aliases": [
+      "github",
+      "gitlab",
+      "version control"
+    ],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "github actions": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "ci/cd": 0.5,
+      "jenkins": 0.4
+    }
+  },
+  "gitlab ci": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "ci/cd": 0.5,
+      "jenkins": 0.4
+    }
+  },
+  "go": {
+    "aliases": [
+      "golang"
+    ],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "google ads": {
+    "aliases": [
+      "adwords"
+    ],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "google analytics": {
+    "aliases": [],
+    "category": "statistics tool",
+    "related_skills": {}
+  },
+  "google sheets": {
+    "aliases": [
+      "gsheets"
+    ],
+    "category": "business intelligence",
+    "related_skills": {
+      "microsoft excel": 0.6
+    }
+  },
+  "google tag manager": {
+    "aliases": [
+      "gtm"
+    ],
+    "category": "data analysis",
+    "related_skills": {
+      "google analytics": 0.5
+    }
+  },
+  "grafana": {
+    "aliases": [],
+    "category": "business intelligence",
+    "related_skills": {
+      "prometheus": 0.5
+    }
+  },
+  "graph databases": {
+    "aliases": [],
+    "category": "database",
+    "related_skills": {
+      "neo4j": 0.6
+    }
+  },
+  "graphql": {
+    "aliases": [],
+    "category": "software framework",
+    "related_skills": {
+      "rest apis": 0.4
+    }
+  },
+  "hadoop": {
+    "aliases": [
+      "apache hadoop"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "html": {
+    "aliases": [
+      "html5"
+    ],
+    "category": "software framework",
+    "related_skills": {}
+  },
+  "hubspot": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {
+      "salesforce": 0.4
+    }
+  },
+  "hypothesis testing": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "statistical modeling": 0.5
+    }
+  },
+  "infrastructure as code": {
+    "aliases": [
+      "iac"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "ansible": 0.5,
+      "terraform": 0.6
+    }
+  },
+  "java": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "javascript": {
+    "aliases": [
+      "js"
+    ],
+    "category": "programming language",
+    "related_skills": {
+      "typescript": 0.6
+    }
+  },
+  "jenkins": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "ci/cd": 0.5
+    }
+  },
+  "jira": {
+    "aliases": [],
+    "category": "project management",
+    "related_skills": {}
+  },
+  "json": {
+    "aliases": [],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "julia": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {
+      "python": 0.4,
+      "r": 0.4
+    }
+  },
+  "junit": {
+    "aliases": [],
+    "category": "software testing",
+    "related_skills": {
+      "unit testing": 0.5
+    }
+  },
+  "keras": {
+    "aliases": [],
+    "category": "machine learning",
+    "related_skills": {
+      "pytorch": 0.5,
+      "tensorflow": 0.6
+    }
+  },
+  "kotlin": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "kpi reporting": {
+    "aliases": [
+      "kpi tracking"
+    ],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "kubernetes": {
+    "aliases": [
+      "k8s"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "docker": 0.5
+    }
+  },
+  "linux": {
+    "aliases": [
+      "unix"
+    ],
+    "category": "operating system",
+    "related_skills": {}
+  },
+  "load balancing": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "looker": {
+    "aliases": [
+      "looker studio",
+      "google data studio"
+    ],
+    "category": "business intelligence",
+    "related_skills": {
+      "power bi": 0.5,
+      "qlik sense": 0.5,
+      "tableau": 0.5
+    }
+  },
+  "machine learning": {
+    "aliases": [
+      "ml"
+    ],
+    "category": "machine learning",
+    "related_skills": {}
+  },
+  "master data management": {
+    "aliases": [
+      "mdm"
+    ],
+    "category": "data engineering",
+    "related_skills": {
+      "data governance": 0.5
+    }
+  },
+  "matlab": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "message queues": {
+    "aliases": [
+      "message queue"
+    ],
+    "category": "software engineering",
+    "related_skills": {
+      "rabbitmq": 0.5
+    }
+  },
+  "metadata management": {
+    "aliases": [],
+    "category": "data engineering",
+    "related_skills": {
+      "data cataloging": 0.5
+    }
+  },
+  "microservices": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "microsoft excel": {
+    "aliases": [
+      "excel",
+      "ms excel",
+      "advanced excel"
+    ],
+    "category": "business intelligence",
+    "related_skills": {
+      "google sheets": 0.6
+    }
+  },
+  "microsoft powerpoint": {
+    "aliases": [
+      "powerpoint",
+      "ms powerpoint"
+    ],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "microsoft teams": {
+    "aliases": [
+      "ms teams"
+    ],
+    "category": "project management",
+    "related_skills": {}
+  },
+  "minitab": {
+    "aliases": [],
+    "category": "statistics tool",
+    "related_skills": {}
+  },
+  "mixpanel": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "amplitude": 0.5
+    }
+  },
+  "mongodb": {
+    "aliases": [
+      "mongo db",
+      "mongo"
+    ],
+    "category": "database",
+    "related_skills": {
+      "nosql": 0.6
+    }
+  },
+  "natural language processing": {
+    "aliases": [
+      "nlp"
+    ],
+    "category": "machine learning",
+    "related_skills": {
+      "machine learning": 0.5
+    }
+  },
+  "neo4j": {
+    "aliases": [],
+    "category": "database",
+    "related_skills": {
+      "graph databases": 0.6
+    }
+  },
+  "netsuite": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "new relic": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "datadog": 0.4
+    }
+  },
+  "node.js": {
+    "aliases": [
+      "nodejs",
+      "node"
+    ],
+    "category": "software framework",
+    "related_skills": {}
+  },
+  "nosql": {
+    "aliases": [
+      "no-sql"
+    ],
+    "category": "database query language",
+    "related_skills": {}
+  },
+  "object oriented programming": {
+    "aliases": [
+      "oop"
+    ],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "oracle database": {
+    "aliases": [
+      "oracle db",
+      "oracle"
+    ],
+    "category": "database",
+    "related_skills": {}
+  },
+  "perl": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "php": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "power bi": {
+    "aliases": [
+      "powerbi",
+      "microsoft power bi",
+      "power-bi"
+    ],
+    "category": "business intelligence",
+    "related_skills": {
+      "looker": 0.5,
+      "qlik sense": 0.5,
+      "tableau": 0.5
+    }
+  },
+  "powershell": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {
+      "bash scripting": 0.4
+    }
+  },
+  "predictive modeling": {
+    "aliases": [],
+    "category": "machine learning",
+    "related_skills": {
+      "machine learning": 0.5,
+      "statistical modeling": 0.5
+    }
+  },
+  "presentation skills": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "prometheus": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "grafana": 0.5
+    }
+  },
+  "pytest": {
+    "aliases": [],
+    "category": "software testing",
+    "related_skills": {
+      "unit testing": 0.5
+    }
+  },
+  "python": {
+    "aliases": [
+      "python3",
+      "python 3"
+    ],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "pytorch": {
+    "aliases": [],
+    "category": "machine learning",
+    "related_skills": {
+      "keras": 0.5,
+      "tensorflow": 0.6
+    }
+  },
+  "qlik sense": {
+    "aliases": [
+      "qlikview",
+      "qlik"
+    ],
+    "category": "business intelligence",
+    "related_skills": {
+      "looker": 0.5,
+      "power bi": 0.5,
+      "tableau": 0.5
+    }
+  },
+  "r": {
+    "aliases": [
+      "r programming",
+      "r language"
+    ],
+    "category": "programming language",
+    "related_skills": {
+      "python": 0.4
+    }
+  },
+  "rabbitmq": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {
+      "message queues": 0.5
+    }
+  },
+  "react": {
+    "aliases": [
+      "react.js",
+      "reactjs"
+    ],
+    "category": "software framework",
+    "related_skills": {}
+  },
+  "redis": {
+    "aliases": [],
+    "category": "database",
+    "related_skills": {}
+  },
+  "redshift": {
+    "aliases": [
+      "amazon redshift",
+      "aws redshift"
+    ],
+    "category": "database",
+    "related_skills": {
+      "bigquery": 0.5,
+      "snowflake": 0.5
+    }
+  },
+  "regex": {
+    "aliases": [
+      "regular expressions"
+    ],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "regression analysis": {
+    "aliases": [],
+    "category": "data analysis",
+    "related_skills": {
+      "statistical modeling": 0.5
+    }
+  },
+  "reinforcement learning": {
+    "aliases": [],
+    "category": "machine learning",
+    "related_skills": {
+      "machine learning": 0.5
+    }
+  },
+  "requirements gathering": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {
+      "stakeholder management": 0.4
+    }
+  },
+  "rest apis": {
+    "aliases": [
+      "restful apis",
+      "api development"
+    ],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "ruby": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "rust": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "salesforce": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "sap": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "sas": {
+    "aliases": [],
+    "category": "statistics tool",
+    "related_skills": {}
+  },
+  "sass": {
+    "aliases": [
+      "scss"
+    ],
+    "category": "software framework",
+    "related_skills": {
+      "css": 0.5
+    }
+  },
+  "scala": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "scikit-learn": {
+    "aliases": [
+      "sklearn"
+    ],
+    "category": "machine learning",
+    "related_skills": {
+      "machine learning": 0.5
+    }
+  },
+  "scrum": {
+    "aliases": [
+      "scrum methodology"
+    ],
+    "category": "project management",
+    "related_skills": {
+      "agile methodology": 0.6
+    }
+  },
+  "search engine marketing": {
+    "aliases": [
+      "sem"
+    ],
+    "category": "data analysis",
+    "related_skills": {
+      "seo": 0.4
+    }
+  },
+  "segment": {
+    "aliases": [
+      "segment.io"
+    ],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "selenium": {
+    "aliases": [],
+    "category": "software testing",
+    "related_skills": {}
+  },
+  "seo": {
+    "aliases": [
+      "search engine optimization"
+    ],
+    "category": "data analysis",
+    "related_skills": {}
+  },
+  "serverless architecture": {
+    "aliases": [
+      "serverless"
+    ],
+    "category": "cloud platform",
+    "related_skills": {
+      "aws lambda": 0.5
+    }
+  },
+  "sharepoint": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "sigma computing": {
+    "aliases": [
+      "sigma"
+    ],
+    "category": "business intelligence",
+    "related_skills": {}
+  },
+  "slack": {
+    "aliases": [],
+    "category": "project management",
+    "related_skills": {}
+  },
+  "snowflake": {
+    "aliases": [],
+    "category": "database",
+    "related_skills": {
+      "bigquery": 0.5,
+      "redshift": 0.5
+    }
+  },
+  "software architecture": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {
+      "system design": 0.6
+    }
+  },
+  "splunk": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {
+      "datadog": 0.4
+    }
+  },
+  "spring boot": {
+    "aliases": [
+      "spring framework"
+    ],
+    "category": "software framework",
+    "related_skills": {}
+  },
+  "spss": {
+    "aliases": [],
+    "category": "statistics tool",
+    "related_skills": {}
+  },
+  "sql": {
+    "aliases": [
+      "structured query language",
+      "postgresql",
+      "mysql",
+      "t-sql",
+      "sql server",
+      "mssql"
+    ],
+    "category": "database query language",
+    "related_skills": {}
+  },
+  "stakeholder management": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "stata": {
+    "aliases": [],
+    "category": "statistics tool",
+    "related_skills": {}
+  },
+  "statistical modeling": {
+    "aliases": [
+      "statistical analysis"
+    ],
+    "category": "machine learning",
+    "related_skills": {}
+  },
+  "swift": {
+    "aliases": [],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "system design": {
+    "aliases": [],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "tableau": {
+    "aliases": [
+      "tableau desktop",
+      "tableau server"
+    ],
+    "category": "business intelligence",
+    "related_skills": {
+      "looker": 0.5,
+      "power bi": 0.5,
+      "qlik sense": 0.5
+    }
+  },
+  "technical writing": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {}
+  },
+  "tensorflow": {
+    "aliases": [],
+    "category": "machine learning",
+    "related_skills": {
+      "keras": 0.6,
+      "pytorch": 0.6
+    }
+  },
+  "teradata": {
+    "aliases": [],
+    "category": "database",
+    "related_skills": {}
+  },
+  "terraform": {
+    "aliases": [],
+    "category": "cloud platform",
+    "related_skills": {}
+  },
+  "time series analysis": {
+    "aliases": [
+      "time series forecasting"
+    ],
+    "category": "machine learning",
+    "related_skills": {}
+  },
+  "trello": {
+    "aliases": [],
+    "category": "project management",
+    "related_skills": {
+      "jira": 0.5
+    }
+  },
+  "typescript": {
+    "aliases": [
+      "ts"
+    ],
+    "category": "programming language",
+    "related_skills": {
+      "javascript": 0.6
+    }
+  },
+  "unit testing": {
+    "aliases": [
+      "test driven development",
+      "tdd"
+    ],
+    "category": "software engineering",
+    "related_skills": {}
+  },
+  "variance analysis": {
+    "aliases": [],
+    "category": "business tool",
+    "related_skills": {
+      "financial modeling": 0.4
+    }
+  },
+  "vba": {
+    "aliases": [
+      "visual basic for applications"
+    ],
+    "category": "programming language",
+    "related_skills": {}
+  },
+  "windows server": {
+    "aliases": [],
+    "category": "operating system",
+    "related_skills": {}
+  },
+  "xgboost": {
+    "aliases": [],
+    "category": "machine learning",
+    "related_skills": {
+      "machine learning": 0.5
+    }
+  },
+  "xml": {
+    "aliases": [],
+    "category": "data engineering",
+    "related_skills": {}
+  },
+  "yaml": {
+    "aliases": [],
+    "category": "data engineering",
+    "related_skills": {}
+  }
+}

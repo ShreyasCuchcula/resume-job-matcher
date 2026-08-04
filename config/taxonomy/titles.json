@@ -1,0 +1,256 @@
+{
+  "administrative coordinator": {
+    "aliases": [
+      "admin coordinator",
+      "office coordinator"
+    ],
+    "related_titles": []
+  },
+  "analytics engineer": {
+    "aliases": [],
+    "related_titles": [
+      "data engineer",
+      "data analyst",
+      "bi analyst"
+    ]
+  },
+  "application developer": {
+    "aliases": [],
+    "related_titles": [
+      "software engineer",
+      "backend engineer"
+    ]
+  },
+  "applied scientist": {
+    "aliases": [],
+    "related_titles": [
+      "data scientist",
+      "machine learning engineer",
+      "research scientist"
+    ]
+  },
+  "backend engineer": {
+    "aliases": [
+      "backend developer"
+    ],
+    "related_titles": [
+      "software engineer",
+      "full stack engineer"
+    ]
+  },
+  "bi analyst": {
+    "aliases": [
+      "business intelligence analyst",
+      "bi developer"
+    ],
+    "related_titles": [
+      "data analyst",
+      "reporting analyst",
+      "business analyst"
+    ]
+  },
+  "business analyst": {
+    "aliases": [
+      "business systems analyst"
+    ],
+    "related_titles": [
+      "data analyst",
+      "reporting analyst",
+      "bi analyst"
+    ]
+  },
+  "data analyst": {
+    "aliases": [
+      "data analyst i",
+      "junior data analyst",
+      "associate data analyst"
+    ],
+    "related_titles": [
+      "senior data analyst",
+      "data analyst ii",
+      "reporting analyst",
+      "business analyst",
+      "bi analyst",
+      "operations analyst",
+      "reporting coordinator"
+    ]
+  },
+  "data analyst ii": {
+    "aliases": [
+      "data analyst 2"
+    ],
+    "related_titles": [
+      "data analyst",
+      "reporting analyst",
+      "operations analyst"
+    ]
+  },
+  "data engineer": {
+    "aliases": [
+      "data engineer i",
+      "big data engineer"
+    ],
+    "related_titles": [
+      "senior data engineer",
+      "data pipeline engineer",
+      "etl developer",
+      "analytics engineer"
+    ]
+  },
+  "data pipeline engineer": {
+    "aliases": [],
+    "related_titles": [
+      "data engineer",
+      "etl developer",
+      "analytics engineer"
+    ]
+  },
+  "data scientist": {
+    "aliases": [
+      "data scientist i",
+      "junior data scientist"
+    ],
+    "related_titles": [
+      "senior data scientist",
+      "machine learning engineer",
+      "research scientist",
+      "applied scientist"
+    ]
+  },
+  "etl developer": {
+    "aliases": [
+      "etl engineer"
+    ],
+    "related_titles": [
+      "data engineer",
+      "data pipeline engineer"
+    ]
+  },
+  "frontend engineer": {
+    "aliases": [
+      "frontend developer",
+      "ui engineer"
+    ],
+    "related_titles": [
+      "full stack engineer",
+      "software engineer"
+    ]
+  },
+  "full stack engineer": {
+    "aliases": [
+      "full stack developer"
+    ],
+    "related_titles": [
+      "software engineer",
+      "backend engineer",
+      "frontend engineer"
+    ]
+  },
+  "machine learning engineer": {
+    "aliases": [
+      "ml engineer"
+    ],
+    "related_titles": [
+      "data scientist",
+      "applied scientist"
+    ]
+  },
+  "operations analyst": {
+    "aliases": [
+      "ops analyst"
+    ],
+    "related_titles": [
+      "data analyst",
+      "reporting analyst",
+      "reporting coordinator"
+    ]
+  },
+  "reporting analyst": {
+    "aliases": [
+      "reporting & analytics analyst",
+      "reporting and analytics analyst"
+    ],
+    "related_titles": [
+      "data analyst",
+      "business analyst",
+      "operations analyst",
+      "bi analyst"
+    ]
+  },
+  "reporting coordinator": {
+    "aliases": [],
+    "related_titles": [
+      "operations analyst",
+      "data analyst",
+      "reporting analyst"
+    ]
+  },
+  "research scientist": {
+    "aliases": [],
+    "related_titles": [
+      "data scientist",
+      "applied scientist"
+    ]
+  },
+  "senior data analyst": {
+    "aliases": [
+      "sr data analyst",
+      "sr. data analyst",
+      "senior data analyst ii"
+    ],
+    "related_titles": [
+      "data analyst",
+      "bi analyst",
+      "business analyst"
+    ]
+  },
+  "senior data engineer": {
+    "aliases": [
+      "sr data engineer"
+    ],
+    "related_titles": [
+      "data engineer",
+      "data pipeline engineer"
+    ]
+  },
+  "senior data scientist": {
+    "aliases": [
+      "sr data scientist"
+    ],
+    "related_titles": [
+      "data scientist",
+      "machine learning engineer"
+    ]
+  },
+  "senior software engineer": {
+    "aliases": [
+      "sr software engineer",
+      "staff software engineer"
+    ],
+    "related_titles": [
+      "software engineer",
+      "backend engineer"
+    ]
+  },
+  "software engineer": {
+    "aliases": [
+      "software developer",
+      "swe",
+      "software engineer i"
+    ],
+    "related_titles": [
+      "senior software engineer",
+      "backend engineer",
+      "full stack engineer",
+      "application developer"
+    ]
+  },
+  "teacher": {
+    "aliases": [
+      "high school teacher",
+      "mathematics teacher",
+      "classroom teacher"
+    ],
+    "related_titles": []
+  }
+}

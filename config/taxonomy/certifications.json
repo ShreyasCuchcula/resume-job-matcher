@@ -1,0 +1,246 @@
+{
+  "aws certified data analytics specialty": {
+    "aliases": [
+      "aws data analytics specialty",
+      "aws certified big data specialty"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "aws certified developer associate": {
+    "aliases": [
+      "aws certified developer",
+      "aws developer associate"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "aws certified machine learning specialty": {
+    "aliases": [
+      "aws ml specialty",
+      "aws certified machine learning"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "aws certified solutions architect associate": {
+    "aliases": [
+      "aws csa",
+      "aws certified solutions architect",
+      "aws solutions architect associate"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {
+      "aws certified solutions architect professional": 0.6
+    }
+  },
+  "aws certified solutions architect professional": {
+    "aliases": [
+      "aws csa professional",
+      "aws solutions architect professional"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {
+      "aws certified solutions architect associate": 0.8
+    }
+  },
+  "azure data engineer associate": {
+    "aliases": [
+      "dp-203",
+      "microsoft certified azure data engineer"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "azure data scientist associate": {
+    "aliases": [
+      "dp-100",
+      "microsoft certified azure data scientist"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "azure fundamentals": {
+    "aliases": [
+      "az-900",
+      "microsoft azure fundamentals"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "capm": {
+    "aliases": [
+      "certified associate in project management"
+    ],
+    "category": "project management",
+    "equivalents": {},
+    "related": {
+      "pmp": 0.5
+    }
+  },
+  "certified analytics professional": {
+    "aliases": [
+      "cap certification",
+      "cap"
+    ],
+    "category": "data analytics",
+    "equivalents": {},
+    "related": {}
+  },
+  "certified data management professional": {
+    "aliases": [
+      "cdmp"
+    ],
+    "category": "data governance",
+    "equivalents": {},
+    "related": {}
+  },
+  "comptia data+": {
+    "aliases": [
+      "comptia data plus"
+    ],
+    "category": "data analytics",
+    "equivalents": {},
+    "related": {}
+  },
+  "csm": {
+    "aliases": [
+      "certified scrummaster",
+      "certified scrum master"
+    ],
+    "category": "project management",
+    "equivalents": {},
+    "related": {
+      "psm": 0.8
+    }
+  },
+  "databricks certified data engineer associate": {
+    "aliases": [
+      "databricks data engineer associate"
+    ],
+    "category": "data engineering",
+    "equivalents": {},
+    "related": {}
+  },
+  "google cloud professional data engineer": {
+    "aliases": [
+      "gcp professional data engineer",
+      "google cloud data engineer certification"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "google cloud professional machine learning engineer": {
+    "aliases": [
+      "gcp professional ml engineer",
+      "google cloud machine learning certification"
+    ],
+    "category": "cloud",
+    "equivalents": {},
+    "related": {}
+  },
+  "google data analytics certificate": {
+    "aliases": [
+      "google data analytics professional certificate"
+    ],
+    "category": "data analytics",
+    "equivalents": {},
+    "related": {}
+  },
+  "itil foundation": {
+    "aliases": [
+      "itil foundation certification",
+      "itil v4 foundation"
+    ],
+    "category": "process improvement",
+    "equivalents": {},
+    "related": {}
+  },
+  "microsoft power bi data analyst associate": {
+    "aliases": [
+      "pl-300",
+      "microsoft certified power bi data analyst"
+    ],
+    "category": "business intelligence",
+    "equivalents": {},
+    "related": {}
+  },
+  "pmp": {
+    "aliases": [
+      "project management professional",
+      "pmp certification",
+      "pmp certified"
+    ],
+    "category": "project management",
+    "equivalents": {},
+    "related": {
+      "capm": 0.5
+    }
+  },
+  "psm": {
+    "aliases": [
+      "professional scrum master"
+    ],
+    "category": "project management",
+    "equivalents": {},
+    "related": {
+      "csm": 0.8
+    }
+  },
+  "sas certified specialist base programming": {
+    "aliases": [
+      "sas base programmer certification",
+      "sas certified base programmer"
+    ],
+    "category": "data analytics",
+    "equivalents": {},
+    "related": {}
+  },
+  "six sigma black belt": {
+    "aliases": [
+      "lean six sigma black belt"
+    ],
+    "category": "process improvement",
+    "equivalents": {},
+    "related": {
+      "six sigma green belt": 0.6
+    }
+  },
+  "six sigma green belt": {
+    "aliases": [
+      "lean six sigma green belt"
+    ],
+    "category": "process improvement",
+    "equivalents": {},
+    "related": {
+      "six sigma black belt": 0.6
+    }
+  },
+  "snowflake snowpro core": {
+    "aliases": [
+      "snowpro core",
+      "snowflake snowpro certification"
+    ],
+    "category": "data engineering",
+    "equivalents": {},
+    "related": {}
+  },
+  "tableau certified data analyst": {
+    "aliases": [
+      "tableau desktop specialist",
+      "tableau certified associate"
+    ],
+    "category": "business intelligence",
+    "equivalents": {},
+    "related": {}
+  }
+}

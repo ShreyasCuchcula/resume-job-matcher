@@ -1,0 +1,83 @@
+{
+  "ladder": [
+    "high_school",
+    "associate",
+    "bachelor",
+    "master",
+    "doctorate"
+  ],
+  "levels": {
+    "high_school": {
+      "aliases": [
+        "high school diploma",
+        "high school",
+        "ged",
+        "secondary school",
+        "secondary education"
+      ]
+    },
+    "associate": {
+      "aliases": [
+        "associate degree",
+        "associate's degree",
+        "a.a.",
+        "a.s.",
+        "aa",
+        "as",
+        "associate of arts",
+        "associate of science"
+      ]
+    },
+    "bachelor": {
+      "aliases": [
+        "bachelor's degree",
+        "bachelor of science",
+        "bachelor of arts",
+        "b.s.",
+        "b.a.",
+        "bs",
+        "ba",
+        "bsc",
+        "bachelors",
+        "undergraduate degree",
+        "b.tech",
+        "btech",
+        "b.e.",
+        "be",
+        "bba"
+      ]
+    },
+    "master": {
+      "aliases": [
+        "master's degree",
+        "master of science",
+        "master of arts",
+        "m.s.",
+        "m.a.",
+        "ms",
+        "ma",
+        "msc",
+        "masters",
+        "graduate degree",
+        "m.tech",
+        "mtech",
+        "mba",
+        "m.eng",
+        "meng"
+      ]
+    },
+    "doctorate": {
+      "aliases": [
+        "doctoral degree",
+        "doctorate degree",
+        "ph.d.",
+        "phd",
+        "d.phil",
+        "dphil",
+        "ed.d",
+        "edd",
+        "doctor of philosophy"
+      ]
+    }
+  }
+}
