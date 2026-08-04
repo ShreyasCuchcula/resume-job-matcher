@@ -1,0 +1,5 @@
+# Force binary handling so autocrlf never mangles byte-for-byte content
+# (small/text-heavy PDFs in sample_data are otherwise misdetected as text).
+*.pdf binary
+*.docx binary
+*.doc binary

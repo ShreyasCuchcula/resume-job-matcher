@@ -1,0 +1,19 @@
+Data Analyst II
+
+Who We Are
+Bridgeline Health Systems operates community clinics across the region.
+
+What You Will Do
+- Maintain weekly and monthly operational reports for clinic administrators.
+- Query the electronic health records data mart using SQL to extract utilization metrics.
+- Build Excel-based summary workbooks for the finance team.
+- Investigate data quality issues in incoming reports and document root causes.
+
+What You Need
+- SQL is required for this role; you will write queries daily.
+- Advanced Excel skills are mandatory, including pivot tables and lookup formulas.
+- A bachelor's degree in Statistics, Public Health, or a quantitative field is required.
+- This role requires a minimum of 3 years of experience in healthcare or operations reporting.
+
+Compensation
+Salary range disclosed upon interview.

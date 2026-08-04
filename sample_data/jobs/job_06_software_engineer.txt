@@ -1,0 +1,18 @@
+Software Engineer
+
+What You Need
+- Python is required for backend service development.
+- SQL is required for working with the application database.
+- A bachelor's degree in Computer Science or a related field is required.
+- Candidates must have at least 2 years of professional software engineering experience.
+
+Responsibilities
+- Build and maintain backend services in Python.
+- Write and optimize SQL queries against the application database.
+- Participate in code review and on-call rotations.
+- Collaborate with product managers to scope new features.
+
+A Plus
+- PMP certification is a plus for engineers interested in technical leadership.
+- Experience with AWS is preferred.
+- Familiarity with Docker is a bonus.

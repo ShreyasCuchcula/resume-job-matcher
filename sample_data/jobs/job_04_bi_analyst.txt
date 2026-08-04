@@ -1,0 +1,20 @@
+BI Analyst
+
+The Role
+- Design and maintain BI dashboards used across the leadership team.
+- Define and track key performance indicators for the business.
+- Write SQL against the analytics warehouse to build new reports.
+- Maintain Excel-based ad hoc reporting for the finance team.
+
+Must Have
+- Power BI experience is required; it is the team's primary reporting tool.
+- SQL is required for building and troubleshooting reports.
+- Advanced Excel skills, including pivot tables, are required.
+- A bachelor's degree is required.
+
+Bonus Points
+- Experience with Tableau is a plus.
+- Familiarity with Python is preferred.
+
+Perks
+Free lunch on Fridays and a hybrid schedule.

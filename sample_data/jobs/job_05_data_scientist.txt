@@ -1,0 +1,20 @@
+Data Scientist
+
+Requirements
+- Python is required for model development.
+- SQL is required to query training data from the warehouse.
+- Machine learning modeling experience, including classification and regression, is required.
+- A master's degree in a quantitative field such as Statistics, Computer Science, or Data Science,
+  or equivalent experience of 4 years, is required.
+- Candidates must have at least 2 years of relevant experience.
+
+Duties
+- Build and validate predictive models for customer churn and demand forecasting.
+- Query and prepare training datasets using SQL.
+- Communicate model performance and limitations to business stakeholders.
+- Monitor deployed models for drift and retrain as needed.
+
+Desired
+- Experience with deep learning frameworks is a plus.
+- Familiarity with Power BI or Tableau for communicating results is preferred.
+- Exposure to AWS SageMaker is a bonus.

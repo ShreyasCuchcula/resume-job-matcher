@@ -1,0 +1,23 @@
+Data Engineer
+
+About the Team
+We are a five-person platform engineering team supporting the whole analytics org.
+
+Minimum Qualifications
+- Strong SQL skills are required, including query optimization.
+- Python is required for building and maintaining ETL pipelines.
+- Experience designing and building data pipelines is essential.
+- A bachelor's degree in Computer Science or a related field is required.
+- Candidates must have at least 3 years of experience in a data engineering role.
+
+Key Activities
+- Design, build, and maintain ETL pipelines that move data from source systems into the warehouse.
+- Monitor pipeline health and resolve data pipeline failures.
+- Optimize SQL queries and warehouse tables for performance.
+- Collaborate with analysts and data scientists on data model design.
+- Document data lineage for critical tables.
+
+Nice to Have
+- Experience with Apache Airflow is a plus.
+- Familiarity with AWS, including S3 and Redshift, is preferred.
+- Exposure to Docker is a bonus.

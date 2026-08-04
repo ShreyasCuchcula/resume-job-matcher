@@ -1,0 +1,25 @@
+Data Analyst
+
+About Us
+Northfield Retail Analytics helps mid-size retailers understand their customers through data.
+
+Responsibilities
+- Build and maintain recurring dashboards in Power BI for merchandising and marketing stakeholders.
+- Write SQL queries against the retail data warehouse to answer ad hoc business questions.
+- Clean and validate incoming sales and inventory datasets before they reach reporting layers.
+- Present findings and recommendations to non-technical stakeholders in weekly review meetings.
+- Partner with the marketing and merchandising teams to define new reporting requirements.
+
+Requirements
+- Must have strong SQL skills, including joins, aggregations, and window functions.
+- Must have advanced Microsoft Excel skills, including pivot tables and XLOOKUP.
+- A bachelor's degree in Data Analytics, Statistics, Economics, or a related field is required.
+- Candidates must have at least 2 years of experience in a data analysis or reporting role.
+
+Preferred Qualifications
+- Experience with Power BI is preferred.
+- Familiarity with Python for data cleaning is a plus.
+- Exposure to Tableau is a bonus.
+
+Benefits
+Health insurance, 401k matching, and unlimited PTO.
