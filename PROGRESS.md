@@ -1,7 +1,7 @@
 # Resume-Job-Matcher: Project Progress Tracker
 
 **Status:** In Development  
-**Current Checkpoint:** A (Stages 0-2 Complete)
+**Current Checkpoint:** B in progress (Stages 0-3 Complete)
 
 ---
 
@@ -136,28 +136,26 @@ This document tracks detailed progress through all 10 implementation stages, wit
 
 ## Checkpoint B: Parsers & Scoring Brain (Stages 3–8)
 
-### ⬜ Stage 3: Job Parser
+### ✅ Stage 3: Job Parser
 
-**Status:** NOT STARTED  
-**Prerequisite:** Stages 0-2 complete
+**Status:** COMPLETE
 
-#### What Will Be Built
+#### What Was Built
 
-- Job description text → structured JobProfile
-- Heading detection (Requirements, Responsibilities, Preferred)
-- Requirement extraction with confidence scores
-- Responsibility extraction with positions
-- Minimum years extraction
-- Support for varied heading styles
+1. **`parsing/common.py` / `parsing/section_detector.py`** - shared bullet/sentence-splitting utilities (spaCy-backed, loaded lazily) and the job + resume heading dictionaries (Section 9.1/10.2) with punctuation-tolerant, case-insensitive heading detection and section splitting that reports whether any heading was found at all.
+2. **`parsing/skill_extractor.py`, `education_extractor.py`, `certification_extractor.py`** - longest-match-first taxonomy matching over skills.json, degrees.json + fields.json, and certifications.json. Every short (2-4 char), purely alphabetic alias ("r", "go", "ml", "bs", "as", "cap") requires the matched text to be capitalized in the original - these collide with ordinary English words/prepositions in lowercase and would otherwise fire on unrelated prose. Field-of-study extraction matches known fields.json names directly rather than regex-capturing arbitrary text after "in", which broke on compound phrasing like "a quantitative field such as Statistics, Computer Science, or Data Science".
+3. **`parsing/requirement_extractor.py`** - Section 10.3 required/preferred classification (explicit sentence cue beats section heading beats ambiguous), Section 10.4 importance assignment (3 = explicit must/mandatory/required wording, 2 = standard membership, 1 = weak/hedging), Section 10.5 extraction confidence (0.30 base + 0.25 taxonomy match + 0.20 cue + 0.15 heading + 0.10 exact degree/cert pattern), and duplicate merging.
+4. **`parsing/job_parser.py`** - `extract_minimum_years()` (Section 10.6: "N+", "at least X", "minimum of X", range lower-bound, "N years of experience", written numbers zero-twenty, never inferred from "senior" alone); full `parse_job_description()` orchestration (Section 10.1 validation, heading-based extraction or the Section 10.2 no-headings sentence-by-sentence cue fallback, duplicate merging, "nothing scoreable" rejection); `confidence_band()` / `scoreable_requirements()` (Section 10.5's include/review/exclude table); the Section 10.8 confirmation-page data contract as pure functions (`add_requirement`, `edit_requirement`, `delete_requirement`, `reclassify_requirement`, `confirm_job_profile`) - the actual Streamlit page is Stage 9, but the data layer it will call is fully built and tested now.
+5. **`parsing/responsibility_extractor.py`** - splits the responsibilities section into ordered, normalized items (Section 10.7, Section 12.2 steps 1-3).
 
-#### Acceptance Criteria
+#### Known Issues & Resolutions
 
-- "Must have SQL" → required qualification: SQL (importance=3)
-- "Python is a plus" → preferred qualification: Python
-- "Python is preferred" in Requirements section → overrides heading, marked preferred
-- "3+ years" → minimum_relevant_years = 3.0
-- Benefits text yields no qualifications
-- All tests from SPECIFICATION.md Section 18.1 pass
+1. **A bullet wrapped across two physical lines** (as `job_05_data_scientist.txt`'s degree requirement does) was being split into two unrelated fragments by the original line-based splitter, silently losing the "is required" cue and downgrading that item's importance/confidence. Fixed in `parsing/common.py`: a non-bulleted line following a bulleted one is now treated as a continuation of that bullet, not independent prose.
+2. **A degenerate no-heading input (e.g. a long run of the same character, no spaces at all)** could slip past the "nothing scoreable" rejection, because the no-headings fallback treated any unclassified sentence as a responsibility candidate. Fixed by requiring a candidate responsibility sentence to contain at least one space (i.e., be more than a single token) in that fallback path.
+
+#### Verification
+
+Full `parse_job_description()` pipeline run against all 6 real synthetic job descriptions with detailed assertions on every required/preferred item, importance, confidence, minimum-years value, and responsibility ordering - all matching a hand-trace of Sections 10.2-10.6 against the actual file content. 150 tests total (unit + integration), all passing, including every Section 18.1 fixture ("must have SQL" -> required importance=3; "Python is a plus" -> preferred; "Python is preferred" inside a Requirements section -> preferred, wording beats heading; "3+ years" -> 3.0; "two to four years" -> 2.0; benefits text -> no qualifications; "senior" alone -> no minimum) plus dedicated coverage of Section 10.1 rejections and the no-headings fallback end to end.
 
 ---
 
@@ -440,7 +438,7 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | 0 | Project Setup & Synthetic Data | ✅ COMPLETE |
 | 1 | Configuration & Taxonomies | ✅ COMPLETE |
 | 2 | Database & Ingestion Pipeline | ✅ COMPLETE |
-| 3 | Job Parser | ⬜ NOT STARTED |
+| 3 | Job Parser | ✅ COMPLETE |
 | 4 | Resume Parser & PII Stripping | ⬜ NOT STARTED |
 | 5 | Qualification Matcher & Scorer | ⬜ NOT STARTED |
 | 6 | Education Validator | ⬜ NOT STARTED |
@@ -470,7 +468,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | db/migrations/versions/0002_*.py | Nullable resume parse columns | ✅ Ready |
 | ingestion/*.py | File validation, PDF/DOCX extraction, hashing | ✅ Ready |
 | services/candidate_service.py | Batch ingestion orchestration | ✅ Ready |
-| parsing/job_parser.py | Job description parser | ⬜ Stage 3 |
+| parsing/job_parser.py | Job description parser | ✅ Ready |
+| parsing/section_detector.py, skill_extractor.py, education_extractor.py, certification_extractor.py, requirement_extractor.py, responsibility_extractor.py, common.py | Job parser support modules | ✅ Ready |
 | parsing/resume_parser.py | Resume parser + PII stripping | ⬜ Stage 4 |
 | matching/scoring_engine.py | Scoring orchestration | ⬜ Stage 8 |
 | ui/pages/*.py | Streamlit pages (5 pages) | ⬜ Stage 9 |
@@ -480,9 +479,9 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Next Steps
 
-1. ✅ Stages 0-2 complete and verified, locally and on GitHub
-2. ⬜ **Start Stage 3** (Job Parser)
-3. ⬜ Continue through Stages 4-10 in order
+1. ✅ Stages 0-3 complete and verified, locally and on GitHub
+2. ⬜ **Start Stage 4** (Resume Parser & PII Stripping)
+3. ⬜ Continue through Stages 5-10 in order
 4. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
@@ -509,8 +508,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Repository Snapshot
 
-**Latest commit:** `c881240` - "Stage 2: add candidate ingestion service with transactional persistence"  
-**Total commits:** 17  
+**Latest commit:** `5be28c4` - "Stage 3: wire up full job_parser.py orchestration, confidence banding, and confirmation-page contract"  
+**Total commits:** 23  
 **Branch:** main  
 **Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
@@ -521,4 +520,5 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 - `sample_data/expected_rankings.md`: ground truth for 3 jobs + full ingestion-status table
 - `config/taxonomy/`: 178 skills, 5 degree levels, 13 fields, 26 certifications, 26 titles, 35 phrase mappings
 - `db/models.py`: 13 ORM tables, 2 migrations applied
-- `tests/`: 42 tests passing (unit + integration)
+- `parsing/`: job description parser complete (Section 10 in full) across 8 modules
+- `tests/`: 150 tests passing (unit + integration)
