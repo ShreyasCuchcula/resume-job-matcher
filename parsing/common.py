@@ -11,6 +11,40 @@ BULLET_GLYPHS = ("•", "-", "*", "–", "—")  # • - * – —
 _BULLET_PREFIX_RE = re.compile(r"^[•\-*–—]\s*")
 _WHITESPACE_RE = re.compile(r"\s+")
 
+# Written numbers zero-twenty (Section 10.6: "written numbers zero-twenty converted").
+NUMBER_WORDS: dict[str, int] = {
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+}
+
+
+def parse_number_word(token: str) -> int | None:
+    """Converts a digit string or a written number word (zero-twenty)
+    to an int; None if `token` is neither."""
+    token = token.strip().lower()
+    if token.isdigit():
+        return int(token)
+    return NUMBER_WORDS.get(token)
+
 
 def split_lines(text: str) -> list[str]:
     """Non-empty, stripped lines, in order."""
@@ -55,10 +89,17 @@ def split_sentences(text: str) -> list[str]:
 
 def split_into_items(block_lines: list[str]) -> list[str]:
     """Splits a block of lines belonging to one section into individual
-    bullet/sentence items (Section 9.2 / 10.7): bullet glyphs first;
-    any line(s) without bullet markers are sentence-segmented instead.
+    bullet/sentence items (Section 9.2 / 10.7): bullet glyphs first.
+
+    A non-bulleted line that follows a bulleted line is treated as a
+    *continuation* of that bullet (a long bullet wrapped across two
+    physical lines - common when text is copied from a Word doc or PDF
+    - must not be split into a separate, cue-less fragment). Only
+    lines that appear before any bullet, or in a block with no bullets
+    at all, are treated as flowing prose and sentence-segmented.
     """
     items: list[str] = []
+    current_bullet: list[str] | None = None
     prose_buffer: list[str] = []
 
     def flush_prose():
@@ -67,14 +108,24 @@ def split_into_items(block_lines: list[str]) -> list[str]:
             items.extend(split_sentences(joined))
             prose_buffer.clear()
 
+    def flush_bullet():
+        nonlocal current_bullet
+        if current_bullet:
+            items.append(collapse_whitespace(" ".join(current_bullet)))
+        current_bullet = None
+
     for line in block_lines:
         if is_bulleted(line):
             flush_prose()
+            flush_bullet()
             content = strip_bullet_prefix(line).strip()
-            if content:
-                items.append(content)
+            current_bullet = [content] if content else []
+        elif current_bullet is not None:
+            current_bullet.append(line)
         else:
             prose_buffer.append(line)
+
+    flush_bullet()
     flush_prose()
     return items
 
