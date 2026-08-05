@@ -1,14 +1,21 @@
-"""Job responsibility extraction (SPECIFICATION.md Section 10.7).
+"""Job responsibility extraction (SPECIFICATION.md Section 10.7) and
+resume evidence-bullet extraction (Section 9.2) - both are the same
+underlying mechanic (split a section's lines into bullet/sentence
+items, keep the original, produce a normalized copy) wrapped for their
+respective domain schemas.
 
-Bullets/sentences from the responsibilities section only - benefits
-and company boilerplate never reach this function, since they live in
-an "excluded" section and job_parser.py never passes that section's
-lines here.
+Bullets/sentences only ever come from the sections callers pass in -
+job benefits/company boilerplate and resume contact/summary/skills/
+education/certifications/interests/references text are never fed into
+these functions in the first place, per Section 9.2's exclusion list.
 """
 
 from __future__ import annotations
 
-from domain.schemas import JobResponsibility
+from uuid import UUID
+
+from domain.enums import EmploymentSectionType
+from domain.schemas import EvidenceBullet, JobResponsibility
 from parsing.common import normalize_for_matching, split_into_items
 
 
@@ -41,3 +48,44 @@ def extract_responsibilities(
     the vectorizer's job at scoring time, not here)."""
     items = split_into_items(responsibility_lines)
     return build_responsibilities_from_items(items, phrase_map)
+
+
+# ---------------------------------------------------------------------------
+# Resume evidence bullets (Section 9.2)
+# ---------------------------------------------------------------------------
+
+
+def build_evidence_bullets(
+    items: list[str],
+    section_type: EmploymentSectionType,
+    employment_id: UUID | None = None,
+    phrase_map: dict[str, str] | None = None,
+) -> list[EvidenceBullet]:
+    """Wraps already-split bullet/sentence items into EvidenceBullet
+    objects. `employment_id` links a bullet to the specific role block
+    it came from (Section 9.2); it's None for project/research bullets,
+    which have no employment record to attach to."""
+    return [
+        EvidenceBullet(
+            employment_id=employment_id,
+            section_type=section_type,
+            original_text=item,
+            normalized_text=normalize_for_matching(item, phrase_map),
+        )
+        for item in items
+    ]
+
+
+def extract_evidence_bullets(
+    lines: list[str],
+    section_type: EmploymentSectionType,
+    employment_id: UUID | None = None,
+    phrase_map: dict[str, str] | None = None,
+) -> list[EvidenceBullet]:
+    """Splits a block of lines (one employment role's description, or
+    a whole projects/research section) into bullet/sentence items and
+    wraps each as an EvidenceBullet (Section 9.2: bullet glyphs first,
+    sentence-segmented prose otherwise - identical mechanics to the
+    job-side responsibility extraction above)."""
+    items = split_into_items(lines)
+    return build_evidence_bullets(items, section_type, employment_id, phrase_map)
