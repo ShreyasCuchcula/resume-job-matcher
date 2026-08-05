@@ -2,8 +2,8 @@
 field of study, and the "or equivalent experience" clause
 (SPECIFICATION.md Section 9.5, Section 10.4, Section 11.3).
 
-Shared by job parsing (this stage) and resume parsing (a later
-stage), per the Section 4 project structure.
+Shared by job parsing (Stage 3) and resume parsing (this stage), per
+the Section 4 project structure.
 """
 
 from __future__ import annotations
@@ -12,7 +12,17 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from parsing.common import parse_number_word
+from domain.schemas import EducationRecord
+from parsing.common import parse_number_word, split_into_items
+
+# Section 9.5: explicit "expected"/"in progress"-type wording means the
+# degree is not yet finished; an explicit "completed" (or equivalent)
+# means it is. Anything else is genuinely unclear (completed=None) -
+# never guessed.
+_INCOMPLETE_RE = re.compile(
+    r"\b(expected|anticipated|in progress|currently pursuing|pursuing)\b", re.IGNORECASE
+)
+_COMPLETE_RE = re.compile(r"\b(completed|conferred|graduated|awarded)\b", re.IGNORECASE)
 
 # Bare abbreviations ("bs", "ba", "ms", "ma", "as", "aa", "be") are
 # ordinary short English words/prepositions in lowercase ("as", "be").
@@ -179,3 +189,48 @@ def extract_education(
         equivalent_years=equivalent_years,
         matched_degree_pattern=True,
     )
+
+
+def determine_completion_status(text: str) -> bool | None:
+    """Section 9.5: explicit incomplete wording ("expected", "in
+    progress", ...) -> False; explicit completion wording ("completed",
+    "conferred", ...) -> True; neither -> None (unclear), never
+    guessed."""
+    if _INCOMPLETE_RE.search(text):
+        return False
+    if _COMPLETE_RE.search(text):
+        return True
+    return None
+
+
+def extract_candidate_education(
+    education_lines: list[str],
+    degree_index: list[DegreeIndexEntry],
+    field_index: list[FieldIndexEntry],
+) -> list[EducationRecord]:
+    """Section 9.5, resume side: one EducationRecord per distinct
+    degree mentioned in the education section. Deliberately has no
+    graduation-year field at all (Section 9.4: dropped at extraction
+    time as an age proxy) - EducationRecord's schema simply doesn't
+    carry one."""
+    records: list[EducationRecord] = []
+    seen: set[tuple[str | None, str | None]] = set()
+
+    for item in split_into_items(education_lines):
+        extraction = extract_education(item, degree_index, field_index)
+        if extraction is None:
+            continue
+        key = (extraction.degree_level, extraction.field_of_study)
+        if key in seen:
+            continue
+        seen.add(key)
+        records.append(
+            EducationRecord(
+                degree_level=extraction.degree_level,
+                field_of_study=extraction.field_of_study,
+                completed=determine_completion_status(item),
+                original_text=item,
+            )
+        )
+
+    return records
