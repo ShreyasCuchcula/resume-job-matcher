@@ -1,7 +1,7 @@
 # Resume-Job-Matcher: Project Progress Tracker
 
 **Status:** In Development  
-**Current Checkpoint:** B in progress (Stages 0-6 Complete)
+**Current Checkpoint:** B in progress (Stages 0-7 Complete)
 
 ---
 
@@ -235,26 +235,30 @@ What this stage added was dedicated, explicitly-labeled test coverage proving ev
 
 ---
 
-### ⬜ Stage 7: Experience Scorer
+### ✅ Stage 7: Experience Scorer
 
-**Status:** NOT STARTED  
-**Prerequisite:** Stages 0-6 complete
+**Status:** COMPLETE
 
-#### What Will Be Built
+#### What Was Built
 
-- Years-of-relevant-experience calculation
-- Employment record interval merging (overlapping dates)
-- Experience relevance formula (years_available / years_required)
-- Date confidence assessment
+1. **`matching/experience_scorer.py`** - the full Section 13 experience component:
+   - `merge_intervals()` (Section 13.3) - sorts by start date and coalesces overlapping/touching intervals so parallel roles never double-count calendar time; a merged interval's `date_confidence` is the minimum across everything that fed into it.
+   - `is_title_relevant()` / `is_similarity_relevant()` / `determine_role_relevance()` (Section 13.2) - "a role counts if either passes": normalized title matches the job's own title or one of its `related_titles` (titles.json), or mean bullet/responsibility cosine similarity clears the configured threshold via an optional fitted vectorizer. **This is load-bearing, not a nice-to-have**: without it, an unrelated role's tenure would silently inflate "relevant experience" - `sample_data/expected_rankings.md`'s Elliot Marsh fixture (a reporting-analyst role must contribute zero years toward a Data Scientist posting) depends on it directly.
+   - `calculate_relevant_years()` - determines role-relevant intervals, merges them, sums to years; excludes any employment record with unparseable dates (using the *scoring run's* `run_date` to resolve "Present" roles, not whatever run_date the resume happened to be parsed with) with a `MISSING_DATES` warning; adds `TITLE_ONLY_RELEVANCE` when the job has a stated minimum but zero responsibilities to compare bullets against.
+   - `experience_score_from_years()` / `calculate_experience_match()` (Section 13.1/13.4) - `score = 100 * min(relevant_years / required_years, 1.0)`, rounded to 2dp; `score=None` when the job states no explicit minimum (never inferred from a seniority word); a real `0.00` (not `None`) when the minimum exists but zero relevant years were found.
+2. **`matching/scoring_engine.py`** - `score_experience()` and `compute_relevant_years()`, both hard-asserting `job.confirmed`. `compute_relevant_years()` is computed independently of whether the job states a general experience minimum, since a per-requirement "degree or equivalent experience" clause (Section 11.3, Stage 5/6) is orthogonal to `job.minimum_relevant_years` - its output feeds directly into `score_required_qualifications(relevant_years=...)`, the exact seam Stage 5/6 built ahead of time for this stage to plug into.
 
-#### Acceptance Criteria
+The similarity path (Section 13.2 path 2) needs a fitted `TfidfVectorizer`, a batch-level artifact Section 12.3 says is fit once per scoring run - that doesn't exist until Stage 8. `vectorizer` is an optional parameter throughout (default `None`): title match always works standalone now; Stage 8 can pass its fitted vectorizer in later to also exercise the similarity path, with zero signature changes.
 
-- Fixture: 2.5 years / 3 required = 83.33% score
-- Fixture: 5 years / 3 required = 100.00% score
-- Overlapping intervals merged correctly: [2019-01 to 2021-06] + [2020-01 to 2022-01] = 3.0 years
-- End-before-start discarded with warning
-- No minimum stated → `None`
-- All tests from SPECIFICATION.md Section 18.1 pass
+#### Known Issues & Resolutions
+
+1. **The user's own Stage 7 spec message never mentioned role relevance, title matching, or `related_titles` at all** - it described interval merging over "employment records" generically. Implementing that literally (summing every employment record's tenure regardless of relevance) would have silently broken an already-committed acceptance fixture: `expected_rankings.md`'s Elliot Marsh scenario explicitly requires an unrelated reporting-analyst role to contribute zero years toward a Data Scientist posting's experience score. Resolved by implementing full Section 13.2 role relevance (title-match path fully working now; the similarity path wired as an optional forward-compatible parameter for Stage 8), verified directly against the real Elliot Marsh resume and job.
+2. **The Section 18.1 fixtures (2.5/3 -> 83.33, 5/3 -> 100.00) can't be reproduced exactly through real calendar dates** - leap years mean no real date range divides to exactly `2.5 * 365.25` days. Resolved by extracting the pure formula into `experience_score_from_years(relevant_years, required_years)`, tested directly against the exact fixture values, with a separate real-dates test proving the full pipeline lands in the right ballpark (not exact-fixture) through actual employment intervals.
+3. **`EmploymentRecord` has no field distinguishing *why* its dates are unparseable** (`MISSING_DATES` vs. `INVALID_DATE_RANGE` both collapse to `start_date=None, end_date=None, date_confidence=0.0` at Stage 4 parse time, with no residual marker). Rather than fabricate a false distinction at scoring time, excluded records are summarized under one `MISSING_DATES` scoring warning ("may be underestimated"), matching Section 13.4's own umbrella phrasing for this exact case.
+
+#### Verification
+
+476 tests total, all passing; `ruff check .` clean. Both Section 18.1 formula fixtures (83.33, 100.00) reproduce exactly via the pure formula function. Integration-tested against every real job description scored against every real parseable synthetic resume (no crashes, every score in [0,100]) plus every named `expected_rankings.md` scenario touching this component: Peyton Marsh's year-only dates clearing the minimum with lowered confidence surfaced on the evidence (not discounting the score); Skyler Vance's undated role excluded entirely with a `MISSING_DATES` warning; Elliot Marsh's unrelated role correctly contributing zero years (role relevance, not a mere discount); Harper Nakamura's real employment history producing the documented ~7 relevant years from actual parsed dates, then flowing straight into the Section 11.3 degree-or-equivalent formula; Jordan Ellis clearing Job 1's minimum; and Job 4's stated absence of an experience minimum yielding `experience_score=None` for every candidate.
 
 ---
 
@@ -448,7 +452,7 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | 4 | Resume Parser & PII Stripping | ✅ COMPLETE |
 | 5 | Qualification Matcher & Scorer | ✅ COMPLETE |
 | 6 | Education Validator | ✅ COMPLETE |
-| 7 | Experience Scorer | ⬜ NOT STARTED |
+| 7 | Experience Scorer | ✅ COMPLETE |
 | 8 | Responsibility Scorer, Final Score & Persistence | ⬜ NOT STARTED |
 | 9 | Streamlit UI (5 Pages) | ⬜ NOT STARTED |
 | 10 | Testing, Documentation & Polish | ⬜ NOT STARTED |
@@ -479,7 +483,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | parsing/resume_parser.py | Resume parser + PII stripping | ✅ Ready |
 | parsing/pii.py, employment_extractor.py, normalization/dates.py, normalization/titles.py | Resume parser support modules | ✅ Ready |
 | matching/qualification_matcher.py | Skill/education/certification matching + scoring formula | ✅ Ready |
-| matching/scoring_engine.py | Required/preferred qualification scoring orchestration | ✅ Ready (experience/responsibility/final score: Stage 8) |
+| matching/experience_scorer.py | Relevant-years calculation + experience component (Section 13) | ✅ Ready |
+| matching/scoring_engine.py | Required/preferred/experience scoring orchestration | ✅ Ready (responsibility/final score: Stage 8) |
 | ui/pages/*.py | Streamlit pages (5 pages) | ⬜ Stage 9 |
 | README.md | User-facing documentation | ⬜ Stage 10 |
 
@@ -487,9 +492,9 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Next Steps
 
-1. ✅ Stages 0-6 complete and verified, locally and on GitHub
-2. ⬜ **Start Stage 7** (Experience Scorer)
-3. ⬜ Continue through Stages 8-10 in order
+1. ✅ Stages 0-7 complete and verified, locally and on GitHub
+2. ⬜ **Start Stage 8** (Responsibility Scorer & Final Score & Persistence)
+3. ⬜ Continue through Stages 9-10 in order
 4. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
@@ -516,8 +521,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Repository Snapshot
 
-**Latest commit:** `17356d4` - "Verify degree-or-equivalent contract end to end (Stage 6)"  
-**Total commits:** 39  
+**Latest commit:** `81a008b` - "Verify experience scoring against real jobs, resumes, and ground truth (Stage 7)"  
+**Total commits:** 43  
 **Branch:** main  
 **Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
@@ -530,5 +535,5 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 - `db/models.py`: 13 ORM tables, 2 migrations applied
 - `parsing/`: job description parser (Section 10) and resume parser (Section 9) both complete, across 12 modules
 - `normalization/`: dates.py, titles.py
-- `matching/`: qualification_matcher.py (skill/education/certification matching + Section 11.1 scoring formula), scoring_engine.py (required/preferred orchestration)
-- `tests/`: 423 tests passing (unit + integration)
+- `matching/`: qualification_matcher.py (skill/education/certification matching + Section 11.1 scoring formula), experience_scorer.py (Section 13 relevant-years + formula), scoring_engine.py (required/preferred/experience orchestration)
+- `tests/`: 476 tests passing (unit + integration)
