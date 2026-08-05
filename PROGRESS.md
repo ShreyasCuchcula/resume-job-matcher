@@ -1,7 +1,7 @@
 # Resume-Job-Matcher: Project Progress Tracker
 
 **Status:** In Development  
-**Current Checkpoint:** B in progress (Stages 0-4 Complete)
+**Current Checkpoint:** B in progress (Stages 0-5 Complete)
 
 ---
 
@@ -187,25 +187,28 @@ All 21 real parseable synthetic resumes parse without error. Every Section 18.1 
 
 ---
 
-### ⬜ Stage 5: Qualification Matcher & Scorer
+### ✅ Stage 5: Qualification Matcher & Scorer
 
-**Status:** NOT STARTED  
-**Prerequisite:** Stages 0-4 complete
+**Status:** COMPLETE
 
-#### What Will Be Built
+#### What Was Built
 
-- Required/preferred qualification matching (skills, education, certs)
-- Qualification score calculation (Section 11.2 formula)
-- Evidence strength calculation
-- Skill importance weighting
+1. **`matching/qualification_matcher.py`** - the full Section 11 matching engine:
+   - `match_skill()` (Section 11.2) - exact/alias match keeps the candidate's own tiered evidence strength (1.00 bullet / 0.90 summary / 0.80 skills-section, set by Stage 4); failing that, a taxonomy-approved related skill (looked up under the *required* skill's own `related_skills` entry in skills.json) earns flat configured partial credit (default 0.50); otherwise a `not_identified` `MissingItem`.
+   - `match_education()` (Section 11.3) - degree-level score (meets/exceeds=1.00, one level below=0.50, lower/absent=0.00) times field score (exact/related=1.00, somewhat-related=0.75, else 0.00), falling back to a single axis for level-only or field-only requirements; best-of across all of a candidate's education records (never mixes level from one record with field from another); "degree or equivalent experience" via `max(degree_match, min(relevant_years/equivalent_years, 1.0))`, with `relevant_years` left optional (Stage 7's experience scorer will supply the real value) and an unstated `equivalent_years` never invented - it raises an `EQUIVALENT_YEARS_NOT_STATED` warning instead.
+   - `match_certification()` (Section 11.4) - exact credential (or taxonomy-approved equivalent), held = 1.00; taxonomy-approved related (non-equivalent) credential, held = configured partial; pending/preparing/coursework wording = 0.00 + `PENDING_CREDENTIAL` warning; not identified = 0.00 + `MISSING_REQUIRED_CREDENTIAL` recruiter-verification warning when the item is required (never auto-rejects). Applies identically to "certification" and "license" requirement types.
+   - `match_qualifications()` - the single entry point for both required and preferred lists (Section 11.1: identical mechanics): `score = 100 * sum(importance_i * match_i) / sum(importance_i)`, rounded to 2dp; an empty requirements list returns `score=None` (inapplicable, never 0, never free points). Dispatches per `JobRequirement.type` to the three matchers above and assembles the `ComponentResult`.
+2. **`matching/scoring_engine.py`** - `score_required_qualifications()` / `score_preferred_qualifications()`, each asserting `job.confirmed` (Section 10.8: "unconfirmed jobs cannot be scored" as a hard assertion in the engine, defense in depth alongside the UI-level gate later).
 
-#### Acceptance Criteria
+#### Known Issues & Resolutions
 
-- Fixture score = 94.29 reproduced exactly
-- Repeated skills counted once
-- Empty category → `None` (not 0)
-- Education level × field calculation (one-level-below = 0.50, somewhat-related = 0.75)
-- All tests from SPECIFICATION.md Section 18.1 pass
+1. **The schema's `MissingItemStatus` enum has only three values** (`not_identified` / `unclear` / `pending_credential`) and the spec never states exactly which applies to which mismatch shape. Resolved by an explicit, consistent mapping: a skill/credential/education with zero matching evidence at all -> `not_identified`; an education record that exists but doesn't clearly satisfy the level/field requirement -> `unclear` (something education-shaped is present, it just isn't proof of absence either way); a credential found but not yet held -> `pending_credential`.
+2. **No `legally_required` flag exists anywhere in the schema**, but Section 11.4 calls for a "verification warning when legally required" on a missing credential. Resolved by emitting `MISSING_REQUIRED_CREDENTIAL` whenever a certification/license requirement is `required=True` and not identified at all - approximating "legally required" with "required," the closest signal the schema actually carries - and never for preferred items or for skill/education types.
+3. **skills.json/certifications.json store specific per-relation partial-credit weights** (e.g. `csm` -> `psm`: 0.8) rather than always deferring to scoring.yaml's single `related_default` (0.50). Resolved by using the taxonomy's own specific weight when present (falling back to the module-level default only if a relation is approved with no explicit weight) - consistent with Stage 3/4's precedent of hardcoding scoring-tier constants in the matching code itself rather than threading `ScoringConfig` through every call.
+
+#### Verification
+
+All 4 hand-built Section 11.5 worked fixtures reproduce exactly (94.29 required, 72.00 preferred), including via the real taxonomy-driven "related field" path, not just synthetic numbers. Integration-tested against every real parsed job description scored against every real parseable synthetic resume (6 jobs x 20 resumes, no crashes, every score in [0,100], every evidence item carries non-empty text) plus targeted scenario checks against `expected_rankings.md`: Job 6's PMP held-vs-pending distinction (Reese Chandler gets full preferred credit; Finley Osei's "PMP candidate" wording scores 0.00 with a `PENDING_CREDENTIAL` warning), Job 5's "or equivalent experience of 4 years" clause parses correctly off the real job text and resolves to full credit once a `relevant_years` value is supplied, and Job 2's missing preferred section yields `preferred_score=None` for both real candidates. 401 tests total, all passing; `ruff check .` clean.
 
 ---
 
@@ -440,7 +443,7 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | 2 | Database & Ingestion Pipeline | ✅ COMPLETE |
 | 3 | Job Parser | ✅ COMPLETE |
 | 4 | Resume Parser & PII Stripping | ✅ COMPLETE |
-| 5 | Qualification Matcher & Scorer | ⬜ NOT STARTED |
+| 5 | Qualification Matcher & Scorer | ✅ COMPLETE |
 | 6 | Education Validator | ⬜ NOT STARTED |
 | 7 | Experience Scorer | ⬜ NOT STARTED |
 | 8 | Responsibility Scorer, Final Score & Persistence | ⬜ NOT STARTED |
@@ -472,7 +475,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | parsing/section_detector.py, skill_extractor.py, education_extractor.py, certification_extractor.py, requirement_extractor.py, responsibility_extractor.py, common.py | Job parser support modules | ✅ Ready |
 | parsing/resume_parser.py | Resume parser + PII stripping | ✅ Ready |
 | parsing/pii.py, employment_extractor.py, normalization/dates.py, normalization/titles.py | Resume parser support modules | ✅ Ready |
-| matching/scoring_engine.py | Scoring orchestration | ⬜ Stage 8 |
+| matching/qualification_matcher.py | Skill/education/certification matching + scoring formula | ✅ Ready |
+| matching/scoring_engine.py | Required/preferred qualification scoring orchestration | ✅ Ready (experience/responsibility/final score: Stage 8) |
 | ui/pages/*.py | Streamlit pages (5 pages) | ⬜ Stage 9 |
 | README.md | User-facing documentation | ⬜ Stage 10 |
 
@@ -480,9 +484,9 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Next Steps
 
-1. ✅ Stages 0-4 complete and verified, locally and on GitHub
-2. ⬜ **Start Stage 5** (Qualification Matcher & Scorer)
-3. ⬜ Continue through Stages 6-10 in order
+1. ✅ Stages 0-5 complete and verified, locally and on GitHub
+2. ⬜ **Start Stage 6** (Education Validator)
+3. ⬜ Continue through Stages 7-10 in order
 4. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
@@ -509,8 +513,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Repository Snapshot
 
-**Latest commit:** `0c9d80d` - "Stage 4: wire up full resume_parser.py orchestration"  
-**Total commits:** 30  
+**Latest commit:** `2bb6eef` - "Add scoring_engine integration + full-integration tests (Stage 5)"  
+**Total commits:** 36  
 **Branch:** main  
 **Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
@@ -523,4 +527,5 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 - `db/models.py`: 13 ORM tables, 2 migrations applied
 - `parsing/`: job description parser (Section 10) and resume parser (Section 9) both complete, across 12 modules
 - `normalization/`: dates.py, titles.py
-- `tests/`: 346 tests passing (unit + integration)
+- `matching/`: qualification_matcher.py (skill/education/certification matching + Section 11.1 scoring formula), scoring_engine.py (required/preferred orchestration)
+- `tests/`: 401 tests passing (unit + integration)
