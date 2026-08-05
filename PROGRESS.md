@@ -1,7 +1,7 @@
 # Resume-Job-Matcher: Project Progress Tracker
 
 **Status:** In Development  
-**Current Checkpoint:** B in progress (Stages 0-5 Complete)
+**Current Checkpoint:** B in progress (Stages 0-6 Complete)
 
 ---
 
@@ -212,23 +212,26 @@ All 4 hand-built Section 11.5 worked fixtures reproduce exactly (94.29 required,
 
 ---
 
-### ⬜ Stage 6: Education Validator
+### ✅ Stage 6: Education Validator
 
-**Status:** NOT STARTED  
-**Prerequisite:** Stages 0-5 complete
+**Status:** COMPLETE
 
-#### What Will Be Built
+#### What Was Built
 
-- Education requirement matching
-- Degree level calculation
-- Field-of-study relevance scoring
-- "Degree or equivalent" clause handling
+Stage 5 already built the complete Section 11 qualification-matching engine, and SPECIFICATION.md Section 11 is explicit that education is *not* a separate scoring component - it's "a qualification item inside required/preferred" scored through the exact same `match_qualifications()`/`ComponentResult` machinery as skills and certifications. So `match_education()`, the degree-level x field formula, the "degree or equivalent experience" clause, and the shared `score = 100 x sum(importance_i x match_i) / sum(importance_i)` formula were all already implemented, tested, and committed in Stage 5 - there was no new production code this stage's spec called for that didn't already exist.
 
-#### Acceptance Criteria
+What this stage added was dedicated, explicitly-labeled test coverage proving every Stage 6 acceptance criterion holds through the *public* `match_qualifications()` contract (not just the internal `match_education()` helper Stage 5's own tests already exercise directly):
 
-- Fixture score = 72.00 reproduced exactly
-- "Degree or equivalent X years" satisfied through years_experience
-- All tests from SPECIFICATION.md Section 18.1 pass
+1. **`tests/unit/test_education_validator.py`** - Section 11.3 math (degree level x field, one-level-below=0.50, somewhat-related=0.75, level-only, field-only) run through `match_qualifications()` with education-only requirement lists; the "empty category -> `None`" vs. "required but candidate has nothing -> a real 0.0 with a `MissingItem`" distinction made explicit; the "degree or equivalent experience" formula's `max()`/never-invent-years behavior; and the Section 11.5 preferred-quals fixture (72.00) reproduced again through this stage's own test surface, since that's the only 72.00 fixture SPECIFICATION.md actually defines (it isn't education-specific in the source material - documented in the test module's own docstring rather than silently fabricating a fake education-only fixture number that doesn't exist in the spec).
+2. **`tests/integration/test_education_validator_integration.py`** - confirms exactly one of the 6 real job descriptions (`job_05_data_scientist.txt`) declares "or equivalent experience," and drives Harper Nakamura's real no-degree resume through the actual `matching.scoring_engine.score_required_qualifications()` entry point (not the bare matching function) with and without a supplied `relevant_years`, proving the exact seam Stage 7's experience scorer will plug into already works end to end.
+
+#### Known Issues & Resolutions
+
+1. **`expected_rankings.md`'s hand-reasoned claim that Harper Nakamura's "required score reaches 100.00 purely through the equivalence clause"** doesn't hold exactly against the real parser output (97.5, not 100.00) - one of the *other* required skill items isn't a perfect 1.00 match for this candidate. This isn't a bug: `expected_rankings.md` explicitly caveats itself ("the real job parser may assign different importance... exact scores will shift even though the ordering and reasoning below should still hold"). The integration test was written to assert what must hold exactly - the education item itself carries zero `MissingItem`s and full 1.00 adjusted strength via the equivalence clause - rather than a whole-category total that depends on unrelated items' real extraction quality.
+
+#### Verification
+
+423 tests total, all passing; `ruff check .` clean. All Stage 5 acceptance criteria this stage re-verifies (94.29/72.00 fixtures, degree level x field math, empty-category `None`, degree-or-equivalent contract) still hold; the two new Stage 6 test modules add 22 additional tests specifically proving those same guarantees survive the public `match_qualifications()`/`score_required_qualifications()` contracts rather than only the internal helpers.
 
 ---
 
@@ -444,7 +447,7 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | 3 | Job Parser | ✅ COMPLETE |
 | 4 | Resume Parser & PII Stripping | ✅ COMPLETE |
 | 5 | Qualification Matcher & Scorer | ✅ COMPLETE |
-| 6 | Education Validator | ⬜ NOT STARTED |
+| 6 | Education Validator | ✅ COMPLETE |
 | 7 | Experience Scorer | ⬜ NOT STARTED |
 | 8 | Responsibility Scorer, Final Score & Persistence | ⬜ NOT STARTED |
 | 9 | Streamlit UI (5 Pages) | ⬜ NOT STARTED |
@@ -484,9 +487,9 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Next Steps
 
-1. ✅ Stages 0-5 complete and verified, locally and on GitHub
-2. ⬜ **Start Stage 6** (Education Validator)
-3. ⬜ Continue through Stages 7-10 in order
+1. ✅ Stages 0-6 complete and verified, locally and on GitHub
+2. ⬜ **Start Stage 7** (Experience Scorer)
+3. ⬜ Continue through Stages 8-10 in order
 4. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
@@ -513,8 +516,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Repository Snapshot
 
-**Latest commit:** `2bb6eef` - "Add scoring_engine integration + full-integration tests (Stage 5)"  
-**Total commits:** 36  
+**Latest commit:** `17356d4` - "Verify degree-or-equivalent contract end to end (Stage 6)"  
+**Total commits:** 39  
 **Branch:** main  
 **Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
@@ -528,4 +531,4 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 - `parsing/`: job description parser (Section 10) and resume parser (Section 9) both complete, across 12 modules
 - `normalization/`: dates.py, titles.py
 - `matching/`: qualification_matcher.py (skill/education/certification matching + Section 11.1 scoring formula), scoring_engine.py (required/preferred orchestration)
-- `tests/`: 401 tests passing (unit + integration)
+- `tests/`: 423 tests passing (unit + integration)
