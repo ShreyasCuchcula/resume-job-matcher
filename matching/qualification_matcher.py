@@ -14,6 +14,7 @@ from domain.schemas import (
     CandidateProfile,
     CandidateQualification,
     CertificationRecord,
+    ComponentResult,
     EducationRecord,
     JobRequirement,
     MatchEvidence,
@@ -397,3 +398,81 @@ def match_certification(
             )
         )
     return 0.0, None, missing, warnings
+
+
+# ---------------------------------------------------------------------------
+# Shared scoring formula (Section 11.1) and top-level entry point
+# ---------------------------------------------------------------------------
+
+
+def match_qualifications(
+    requirements: list[JobRequirement],
+    candidate: CandidateProfile,
+    taxonomy: Any,
+    *,
+    relevant_years: float | None = None,
+) -> ComponentResult:
+    """Section 11.1: required and preferred qualifications share
+    identical matching mechanics - this is the single entry point for
+    both; callers pass `job.required_qualifications` or
+    `job.preferred_qualifications`.
+
+    `score = 100 * sum(importance_i * match_i) / sum(importance_i)`,
+    rounded to 2dp. An empty `requirements` list is inapplicable, not
+    zero and not free points - returns `score=None`.
+
+    `taxonomy` is the loaded TaxonomyBundle (or any duck-typed
+    equivalent exposing `.skills`, `.degrees`, `.fields`,
+    `.certifications`), matching the convention already used by
+    `parsing.resume_parser.build_resume_extractor_context`.
+    """
+    if not requirements:
+        return ComponentResult(score=None, evidence=[], missing=[], warnings=[])
+
+    # Stage 4's extract_candidate_skills already keeps exactly one
+    # CandidateQualification per canonical skill (strongest evidence
+    # wins), so this dict construction is itself the "repeated skill
+    # counted once" guarantee - no extra dedup logic needed here.
+    candidate_skills_by_canonical = {q.canonical_name: q for q in candidate.skills}
+
+    evidence: list[MatchEvidence] = []
+    missing: list[MissingItem] = []
+    warnings: list[ScoringWarning] = []
+    weighted_sum = 0.0
+    importance_sum = 0
+
+    for requirement in requirements:
+        item_warnings: list[ScoringWarning] = []
+        if requirement.type == "skill":
+            match_value, match_evidence, missing_item = match_skill(
+                requirement, candidate_skills_by_canonical, taxonomy.skills
+            )
+        elif requirement.type == "education":
+            match_value, match_evidence, missing_item, item_warnings = match_education(
+                requirement,
+                candidate,
+                taxonomy.degrees,
+                taxonomy.fields,
+                relevant_years,
+            )
+        elif requirement.type in ("certification", "license"):
+            match_value, match_evidence, missing_item, item_warnings = (
+                match_certification(
+                    requirement, candidate.certifications, taxonomy.certifications
+                )
+            )
+        else:
+            raise ValueError(f"Unknown requirement type: {requirement.type!r}")
+
+        weighted_sum += requirement.importance * match_value
+        importance_sum += requirement.importance
+        if match_evidence is not None:
+            evidence.append(match_evidence)
+        if missing_item is not None:
+            missing.append(missing_item)
+        warnings.extend(item_warnings)
+
+    score = round(100 * weighted_sum / importance_sum, 2)
+    return ComponentResult(
+        score=score, evidence=evidence, missing=missing, warnings=warnings
+    )
