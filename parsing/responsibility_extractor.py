@@ -12,6 +12,24 @@ from domain.schemas import JobResponsibility
 from parsing.common import normalize_for_matching, split_into_items
 
 
+def build_responsibilities_from_items(
+    items: list[str], phrase_map: dict[str, str] | None = None
+) -> list[JobResponsibility]:
+    """Wraps already-split bullet/sentence items into JobResponsibility
+    objects, preserving order and normalizing each (Section 12.2 steps
+    1-3). Used directly by the no-section-headings fallback path, which
+    has already sentence-segmented its text and would otherwise be
+    re-segmented a second time by extract_responsibilities()."""
+    return [
+        JobResponsibility(
+            original_text=item,
+            normalized_text=normalize_for_matching(item, phrase_map),
+            position=position,
+        )
+        for position, item in enumerate(items)
+    ]
+
+
 def extract_responsibilities(
     responsibility_lines: list[str], phrase_map: dict[str, str] | None = None
 ) -> list[JobResponsibility]:
@@ -22,11 +40,4 @@ def extract_responsibilities(
     phrase_normalization.json - stop-word removal and n-gramming are
     the vectorizer's job at scoring time, not here)."""
     items = split_into_items(responsibility_lines)
-    return [
-        JobResponsibility(
-            original_text=item,
-            normalized_text=normalize_for_matching(item, phrase_map),
-            position=position,
-        )
-        for position, item in enumerate(items)
-    ]
+    return build_responsibilities_from_items(items, phrase_map)
