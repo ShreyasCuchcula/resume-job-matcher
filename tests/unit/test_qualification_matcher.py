@@ -6,14 +6,79 @@ from __future__ import annotations
 from domain.schemas import (
     CandidateProfile,
     CandidateQualification,
+    CertificationRecord,
     EducationRecord,
     JobRequirement,
 )
 from matching.qualification_matcher import (
+    RELATED_CERTIFICATION_DEFAULT,
     RELATED_SKILL_DEFAULT,
+    match_certification,
     match_education,
     match_skill,
 )
+
+CERTIFICATIONS_TAXONOMY = {
+    "pmp": {
+        "aliases": ["project management professional"],
+        "category": "project management",
+        "equivalents": {},
+        "related": {"capm": 0.5},
+    },
+    "capm": {
+        "aliases": [],
+        "category": "project management",
+        "equivalents": {},
+        "related": {"pmp": 0.5},
+    },
+    "csm": {
+        "aliases": [],
+        "category": "project management",
+        "equivalents": {},
+        "related": {"psm": 0.8},
+    },
+    "psm": {
+        "aliases": [],
+        "category": "project management",
+        "equivalents": {},
+        "related": {"csm": 0.8},
+    },
+    "aws certified solutions architect associate": {
+        "aliases": [],
+        "category": "cloud",
+        "equivalents": {"aws csa legacy": 1.0},
+        "related": {},
+    },
+}
+
+
+def _certification_requirement(
+    canonical_name: str, *, importance: int = 2, required: bool = True
+):
+    return JobRequirement(
+        type="certification",
+        canonical_name=canonical_name,
+        original_text=f"Must hold {canonical_name}",
+        importance=importance,
+        confidence=0.9,
+        required=required,
+    )
+
+
+def _certification_record(
+    canonical_name: str,
+    *,
+    held: bool = True,
+    pending: bool = False,
+    text: str | None = None,
+) -> CertificationRecord:
+    return CertificationRecord(
+        canonical_name=canonical_name,
+        original_text=text or f"{canonical_name} (Active)",
+        held=held,
+        pending=pending,
+    )
+
 
 DEGREES_TAXONOMY = {
     "ladder": ["high_school", "associate", "bachelor", "master", "doctorate"]
@@ -436,3 +501,103 @@ class TestDegreeOrEquivalentExperience:
         )
         assert match_value == 0.00
         assert missing is not None
+
+
+class TestCertificationMatch:
+    def test_exact_credential_held_scores_1_00(self):
+        requirement = _certification_requirement("pmp")
+        candidate_certs = [_certification_record("pmp", held=True)]
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, candidate_certs, CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 1.00
+        assert missing is None
+        assert evidence.matched_canonical == "pmp"
+        assert evidence.raw_strength == 1.00
+        assert evidence.adjusted_strength == 1.00
+
+    def test_taxonomy_equivalent_held_scores_1_00(self):
+        requirement = _certification_requirement(
+            "aws certified solutions architect associate"
+        )
+        candidate_certs = [_certification_record("aws csa legacy", held=True)]
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, candidate_certs, CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 1.00
+        assert evidence.matched_canonical == "aws csa legacy"
+
+    def test_taxonomy_related_credential_held_scores_configured_partial(self):
+        """Section 18.1: capm (related=0.5) covers a pmp requirement."""
+        requirement = _certification_requirement("pmp")
+        candidate_certs = [_certification_record("capm", held=True)]
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, candidate_certs, CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 0.5
+        assert match_value == RELATED_CERTIFICATION_DEFAULT
+        assert evidence.matched_canonical == "capm"
+        assert evidence.adjusted_strength == 0.5
+
+    def test_related_credential_that_is_only_pending_grants_no_partial_credit(self):
+        requirement = _certification_requirement("pmp")
+        candidate_certs = [_certification_record("capm", held=False, pending=True)]
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, candidate_certs, CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 0.0
+        assert evidence is None
+
+    def test_pending_exact_credential_scores_0_00_with_warning(self):
+        """Section 18.1 / expected_rankings.md: "PMP candidate" -> not
+        held, 0.00 + PENDING_CREDENTIAL warning."""
+        requirement = _certification_requirement("pmp")
+        candidate_certs = [
+            _certification_record(
+                "pmp", held=False, pending=True, text="PMP candidate, exam scheduled"
+            )
+        ]
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, candidate_certs, CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 0.00
+        assert evidence is None
+        assert missing.status == "pending_credential"
+        assert any(w.code == "PENDING_CREDENTIAL" for w in warnings)
+
+    def test_not_identified_required_certification_flags_verification_warning(self):
+        requirement = _certification_requirement("pmp", required=True)
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, [], CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 0.00
+        assert missing.status == "not_identified"
+        assert any(w.code == "MISSING_REQUIRED_CREDENTIAL" for w in warnings)
+
+    def test_not_identified_preferred_certification_has_no_verification_warning(self):
+        requirement = _certification_requirement("pmp", required=False)
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, [], CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 0.00
+        assert missing.status == "not_identified"
+        assert warnings == []
+
+    def test_symmetric_related_pair_csm_psm(self):
+        requirement = _certification_requirement("csm")
+        candidate_certs = [_certification_record("psm", held=True)]
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, candidate_certs, CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 0.8
+
+    def test_repeated_credential_counted_once_held_wins_over_pending_duplicate(self):
+        requirement = _certification_requirement("pmp")
+        candidate_certs = [
+            _certification_record("pmp", held=False, pending=True),
+            _certification_record("pmp", held=True),
+        ]
+        match_value, evidence, missing, warnings = match_certification(
+            requirement, candidate_certs, CERTIFICATIONS_TAXONOMY
+        )
+        assert match_value == 1.00

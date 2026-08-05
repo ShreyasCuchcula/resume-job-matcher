@@ -13,6 +13,7 @@ from typing import Any
 from domain.schemas import (
     CandidateProfile,
     CandidateQualification,
+    CertificationRecord,
     EducationRecord,
     JobRequirement,
     MatchEvidence,
@@ -27,6 +28,10 @@ from domain.schemas import (
 # here the same way Stage 3/4 hardcoded their own evidence-strength
 # tier constants rather than threading ScoringConfig through.
 RELATED_SKILL_DEFAULT = 0.50
+
+# Section 11.4: flat partial credit for a taxonomy-approved related
+# (non-equivalent) credential.
+RELATED_CERTIFICATION_DEFAULT = 0.50
 
 _NOT_IDENTIFIED_NOTE = "Not identified in the resume - this is not proof of absence."
 
@@ -251,4 +256,144 @@ def match_education(
             )
         ),
     )
+    return 0.0, None, missing, warnings
+
+
+# ---------------------------------------------------------------------------
+# Certification / license matching (Section 11.4)
+# ---------------------------------------------------------------------------
+
+
+def _best_certification_by_canonical(
+    certifications: list[CertificationRecord],
+) -> dict[str, CertificationRecord]:
+    """One record per canonical credential, preferring a held record
+    over a pending one if a candidate somehow lists both (same "best
+    evidence wins" spirit as skills)."""
+    best: dict[str, CertificationRecord] = {}
+    for record in certifications:
+        existing = best.get(record.canonical_name)
+        if existing is None or (not existing.held and record.held):
+            best[record.canonical_name] = record
+    return best
+
+
+def _pending_missing_item(
+    requirement: JobRequirement, record: CertificationRecord
+) -> MissingItem:
+    return MissingItem(
+        requirement_id=requirement.requirement_id,
+        canonical_name=requirement.canonical_name,
+        status="pending_credential",
+        note=f'"{record.canonical_name}" appears pending, not yet held - not proof of absence.',
+    )
+
+
+def _pending_warning(
+    requirement: JobRequirement, record: CertificationRecord
+) -> ScoringWarning:
+    return ScoringWarning(
+        code="PENDING_CREDENTIAL",
+        message=f'"{record.canonical_name}" is not yet held (candidate/pending/preparing/coursework wording) - 0.00 credit.',
+        related_requirement_id=requirement.requirement_id,
+    )
+
+
+def match_certification(
+    requirement: JobRequirement,
+    candidate_certifications: list[CertificationRecord],
+    certifications_taxonomy: dict[str, Any],
+) -> tuple[float, MatchEvidence | None, MissingItem | None, list[ScoringWarning]]:
+    """Section 11.4: exact credential (or taxonomy-approved equivalent),
+    held = 1.00; taxonomy-approved related (non-equivalent) credential,
+    held = configured partial; pending/preparing/coursework = 0.00 +
+    warning; not identified = 0.00 + recruiter-verification warning
+    when the item is required. Applies identically whether
+    `requirement.type` is "certification" or "license" (Section 11.4
+    bundles the two)."""
+    warnings: list[ScoringWarning] = []
+    by_canonical = _best_certification_by_canonical(candidate_certifications)
+
+    exact = by_canonical.get(requirement.canonical_name)
+    if exact is not None:
+        if exact.held:
+            evidence = MatchEvidence(
+                requirement_id=requirement.requirement_id,
+                responsibility_id=None,
+                matched_canonical=exact.canonical_name,
+                evidence_text=exact.original_text,
+                evidence_section="certification",
+                raw_strength=1.0,
+                adjusted_strength=1.0,
+            )
+            return 1.0, evidence, None, warnings
+        warnings.append(_pending_warning(requirement, exact))
+        return 0.0, None, _pending_missing_item(requirement, exact), warnings
+
+    cert_meta = certifications_taxonomy.get(requirement.canonical_name, {})
+
+    for equivalent_canonical in cert_meta.get("equivalents", {}):
+        candidate_record = by_canonical.get(equivalent_canonical)
+        if candidate_record is None:
+            continue
+        if candidate_record.held:
+            evidence = MatchEvidence(
+                requirement_id=requirement.requirement_id,
+                responsibility_id=None,
+                matched_canonical=candidate_record.canonical_name,
+                evidence_text=candidate_record.original_text,
+                evidence_section="certification",
+                raw_strength=1.0,
+                adjusted_strength=1.0,
+            )
+            return 1.0, evidence, None, warnings
+        warnings.append(_pending_warning(requirement, candidate_record))
+        return 0.0, None, _pending_missing_item(requirement, candidate_record), warnings
+
+    best_related: CertificationRecord | None = None
+    best_weight = 0.0
+    for related_canonical, configured_weight in cert_meta.get("related", {}).items():
+        candidate_record = by_canonical.get(related_canonical)
+        if candidate_record is None or not candidate_record.held:
+            continue
+        weight = (
+            configured_weight
+            if configured_weight is not None
+            else RELATED_CERTIFICATION_DEFAULT
+        )
+        if weight > best_weight:
+            best_weight = weight
+            best_related = candidate_record
+
+    if best_related is not None:
+        evidence = MatchEvidence(
+            requirement_id=requirement.requirement_id,
+            responsibility_id=None,
+            matched_canonical=best_related.canonical_name,
+            evidence_text=best_related.original_text,
+            evidence_section="certification",
+            raw_strength=1.0,
+            adjusted_strength=best_weight,
+        )
+        return best_weight, evidence, None, warnings
+
+    missing = MissingItem(
+        requirement_id=requirement.requirement_id,
+        canonical_name=requirement.canonical_name,
+        status="not_identified",
+        note=_NOT_IDENTIFIED_NOTE,
+    )
+    if requirement.required:
+        warnings.append(
+            ScoringWarning(
+                code="MISSING_REQUIRED_CREDENTIAL",
+                message=(
+                    f'"{requirement.canonical_name}" was not identified in the resume. '
+                    "This never auto-rejects the candidate - if this credential is "
+                    "legally required for the role, verify directly with the "
+                    "candidate before proceeding."
+                ),
+                related_requirement_id=requirement.requirement_id,
+            )
+        )
     return 0.0, None, missing, warnings
