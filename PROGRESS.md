@@ -1,7 +1,7 @@
 # Resume-Job-Matcher: Project Progress Tracker
 
 **Status:** In Development  
-**Current Checkpoint:** B in progress (Stages 0-3 Complete)
+**Current Checkpoint:** B in progress (Stages 0-4 Complete)
 
 ---
 
@@ -159,31 +159,31 @@ Full `parse_job_description()` pipeline run against all 6 real synthetic job des
 
 ---
 
-### ⬜ Stage 4: Resume Parser & PII Stripping
+### ✅ Stage 4: Resume Parser & PII Stripping
 
-**Status:** NOT STARTED  
-**Prerequisite:** Stages 0-3 complete
+**Status:** COMPLETE
 
-#### What Will Be Built
+#### What Was Built
 
-- Resume text → structured CandidateProfile
-- Section detection (summary, experience, education, skills, certifications)
-- Evidence extraction with confidence scores
-- 3-layer PII stripping (regex + spaCy NER + rules)
-- Scanned PDF detection
-- Parsing warnings (year-only dates, PMP-candidate, no headings, etc.)
+1. **`parsing/section_detector.py`** - fixed a naming inconsistency (RESUME_HEADINGS mapped "Projects"/"Certifications" to plural canonical names that didn't match the singular `EvidenceSection`/`EmploymentSectionType` domain enums from Stage 1) and verified the resume heading dictionary against all 26 synthetic resumes.
+2. **`parsing/responsibility_extractor.py`** - gained `build_evidence_bullets()`/`extract_evidence_bullets()` (Section 9.2): the same bullet/continuation-line-aware splitting used for job responsibilities, producing `EvidenceBullet` objects linked to their employment role via `employment_id`.
+3. **`parsing/skill_extractor.py`, `education_extractor.py`, `certification_extractor.py`** - resume-side extraction: `extract_candidate_skills()` (Section 9.3 evidence-strength tiers: bullet=1.00, summary=0.90, skills-section=0.80, strongest evidence wins), `extract_candidate_education()` (Section 9.5: degree + field, completion status, no graduation year ever), `extract_candidate_certifications()` (Section 9.6: held vs. pending wording, `PENDING_CREDENTIAL` warning).
+4. **`normalization/dates.py`, `normalization/titles.py`, `parsing/employment_extractor.py`** - Section 9.7: date-range parsing (month-name, numeric, year-only, "Present"), role-block splitting, title normalization.
+5. **`parsing/pii.py`** - three-layer PII stripping (Section 9.4): regex layer (email/phone/URL/address/DOB/age/gender/pronouns/marital/nationality), header layer (contact block above the first heading discarded outright), spaCy NER backstop for names appearing elsewhere.
+6. **`parsing/resume_parser.py`** - full `parse_resume()` orchestration tying every extractor together into a `CandidateProfile`.
+7. Scanned-PDF detection (`probable_scan` status, `min_extracted_chars` threshold) was already built in Stage 2's `ingestion/validation.py` - reverified still passing, no changes needed.
 
-#### Acceptance Criteria
+#### Known Issues & Resolutions
 
-- "PowerBI" normalized to "power bi"
-- Skills in experience bullets = 1.00 confidence
-- Skills in skills-section-only = 0.80 confidence
-- Skills in summary = 0.90 confidence
-- "PMP candidate" (not certified) flagged with warning, not held
-- Year-only dates (e.g., "2020") parsed with lowered confidence
-- Graduation year absent from scoring text
-- Email, phone, name stripped before scoring
-- All tests from SPECIFICATION.md Section 18.1 pass
+1. **A bullet wrapped across two physical lines** was misdetected as the start of a new employment role block (the same class of bug fixed for job parsing in Stage 3, but in a new function). Fixed by only treating a non-bulleted line as a new role header when it actually matches the "Title - Company (Dates)" shape.
+2. **`degrees.json` had no bare "bachelor"/"master"/"associate"/"doctorate" alias**, so "Bachelor of Business Administration" (not an exact match for any curated phrase) failed to match at all, silently dropping that candidate's education record. Added bare-word aliases and several more spelled-out "Bachelor/Master of X" variants.
+3. **spaCy's NER backstop misread proper-noun-shaped technology names** ("Python", "Docker", "Machine Learning") as PERSON entities, silently masking and deleting those skill mentions before extraction ever saw them - found by comparing extracted skills against the actual resume text. Fixed by adding a protected-terms parameter to `mask_person_entities()`; the full skill taxonomy vocabulary is now protected from NER masking.
+4. **The no-headings fallback had no "education"/"certification" section to scan at all**, so a no-headings resume's degree or credential mention was never found even when clean and matchable. Fixed by having both extractors fall back to scanning the same unsectioned body the no-headings path already uses for bullets/skills.
+5. **DOCX table content lands after all paragraph text** (Section 8.2's exact extraction contract), so a skills table ends up as trailing lines under whatever heading was last in the document. Added a targeted recovery heuristic: if the skills section came up empty and another section's last line looks like a bare comma-separated list, treat it as the orphaned table content.
+
+#### Verification
+
+All 21 real parseable synthetic resumes parse without error. Every Section 18.1 fixture this stage covers passes exactly. 6 of the 8 Section 18.3 acceptance scenarios verified at the extraction level (5 and 6 concern job-side/scoring behavior not built yet). Critically, the Section 9.4 name-swap invariant holds: re-parsing the same resume with only the candidate's name and email changed produces byte-identical skills/education/certifications/employment/evidence-bullet extraction - only the audit-only `raw_resume_text` field legitimately differs.
 
 ---
 
@@ -439,7 +439,7 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | 1 | Configuration & Taxonomies | ✅ COMPLETE |
 | 2 | Database & Ingestion Pipeline | ✅ COMPLETE |
 | 3 | Job Parser | ✅ COMPLETE |
-| 4 | Resume Parser & PII Stripping | ⬜ NOT STARTED |
+| 4 | Resume Parser & PII Stripping | ✅ COMPLETE |
 | 5 | Qualification Matcher & Scorer | ⬜ NOT STARTED |
 | 6 | Education Validator | ⬜ NOT STARTED |
 | 7 | Experience Scorer | ⬜ NOT STARTED |
@@ -470,7 +470,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | services/candidate_service.py | Batch ingestion orchestration | ✅ Ready |
 | parsing/job_parser.py | Job description parser | ✅ Ready |
 | parsing/section_detector.py, skill_extractor.py, education_extractor.py, certification_extractor.py, requirement_extractor.py, responsibility_extractor.py, common.py | Job parser support modules | ✅ Ready |
-| parsing/resume_parser.py | Resume parser + PII stripping | ⬜ Stage 4 |
+| parsing/resume_parser.py | Resume parser + PII stripping | ✅ Ready |
+| parsing/pii.py, employment_extractor.py, normalization/dates.py, normalization/titles.py | Resume parser support modules | ✅ Ready |
 | matching/scoring_engine.py | Scoring orchestration | ⬜ Stage 8 |
 | ui/pages/*.py | Streamlit pages (5 pages) | ⬜ Stage 9 |
 | README.md | User-facing documentation | ⬜ Stage 10 |
@@ -479,9 +480,9 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Next Steps
 
-1. ✅ Stages 0-3 complete and verified, locally and on GitHub
-2. ⬜ **Start Stage 4** (Resume Parser & PII Stripping)
-3. ⬜ Continue through Stages 5-10 in order
+1. ✅ Stages 0-4 complete and verified, locally and on GitHub
+2. ⬜ **Start Stage 5** (Qualification Matcher & Scorer)
+3. ⬜ Continue through Stages 6-10 in order
 4. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
@@ -508,8 +509,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Repository Snapshot
 
-**Latest commit:** `5be28c4` - "Stage 3: wire up full job_parser.py orchestration, confidence banding, and confirmation-page contract"  
-**Total commits:** 23  
+**Latest commit:** `0c9d80d` - "Stage 4: wire up full resume_parser.py orchestration"  
+**Total commits:** 30  
 **Branch:** main  
 **Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
@@ -520,5 +521,6 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 - `sample_data/expected_rankings.md`: ground truth for 3 jobs + full ingestion-status table
 - `config/taxonomy/`: 178 skills, 5 degree levels, 13 fields, 26 certifications, 26 titles, 35 phrase mappings
 - `db/models.py`: 13 ORM tables, 2 migrations applied
-- `parsing/`: job description parser complete (Section 10 in full) across 8 modules
-- `tests/`: 150 tests passing (unit + integration)
+- `parsing/`: job description parser (Section 10) and resume parser (Section 9) both complete, across 12 modules
+- `normalization/`: dates.py, titles.py
+- `tests/`: 346 tests passing (unit + integration)
