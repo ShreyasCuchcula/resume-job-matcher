@@ -97,15 +97,28 @@ def _spacy_nlp_with_ner():
     return spacy.load("en_core_web_sm", exclude=["lemmatizer"])
 
 
-def mask_person_entities(text: str) -> str:
+def mask_person_entities(
+    text: str, protected_terms: frozenset[str] | None = None
+) -> str:
     """Layer 3 (Section 9.4): masks every spaCy PERSON entity. Applied
     to the whole (already regex-cleaned) block for better NER context
-    than per-line masking would give."""
+    than per-line masking would give.
+
+    `protected_terms` (lowercased) are never masked even if spaCy tags
+    them PERSON - found via real-data testing: en_core_web_sm's small
+    NER model sometimes misreads a proper-noun-shaped technology name
+    ("Python") as a person's name, which would otherwise silently
+    delete that skill mention from scoring. Callers pass in their
+    taxonomy vocabulary (e.g. every skill canonical name/alias) as the
+    protected set."""
     if not text.strip():
         return text
     doc = _spacy_nlp_with_ner()(text)
+    protected = protected_terms or frozenset()
     person_spans = [
-        (ent.start_char, ent.end_char) for ent in doc.ents if ent.label_ == "PERSON"
+        (ent.start_char, ent.end_char)
+        for ent in doc.ents
+        if ent.label_ == "PERSON" and ent.text.strip().lower() not in protected
     ]
     if not person_spans:
         return text
@@ -115,7 +128,9 @@ def mask_person_entities(text: str) -> str:
     return masked
 
 
-def strip_pii_from_lines(lines: list[str]) -> list[str]:
+def strip_pii_from_lines(
+    lines: list[str], protected_terms: frozenset[str] | None = None
+) -> list[str]:
     """Regex layer per line (structured patterns are line-local and
     line-order-preserving), then NER masking on the joined block for
     context, split back into the original line count. Convenience
@@ -124,5 +139,5 @@ def strip_pii_from_lines(lines: list[str]) -> list[str]:
     if not lines:
         return []
     cleaned = [strip_pii_regex(line) for line in lines]
-    masked = mask_person_entities("\n".join(cleaned))
+    masked = mask_person_entities("\n".join(cleaned), protected_terms)
     return masked.split("\n")

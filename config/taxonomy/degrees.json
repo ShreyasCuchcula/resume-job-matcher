@@ -25,7 +25,8 @@
         "aa",
         "as",
         "associate of arts",
-        "associate of science"
+        "associate of science",
+        "associate"
       ]
     },
     "bachelor": {
@@ -33,6 +34,9 @@
         "bachelor's degree",
         "bachelor of science",
         "bachelor of arts",
+        "bachelor of business administration",
+        "bachelor of engineering",
+        "bachelor of technology",
         "b.s.",
         "b.a.",
         "bs",
@@ -44,7 +48,8 @@
         "btech",
         "b.e.",
         "be",
-        "bba"
+        "bba",
+        "bachelor"
       ]
     },
     "master": {
@@ -52,6 +57,9 @@
         "master's degree",
         "master of science",
         "master of arts",
+        "master of business administration",
+        "master of engineering",
+        "master of technology",
         "m.s.",
         "m.a.",
         "ms",
@@ -63,7 +71,8 @@
         "mtech",
         "mba",
         "m.eng",
-        "meng"
+        "meng",
+        "master"
       ]
     },
     "doctorate": {
@@ -76,7 +85,9 @@
         "dphil",
         "ed.d",
         "edd",
-        "doctor of philosophy"
+        "doctor of philosophy",
+        "doctorate",
+        "doctoral"
       ]
     }
   }
