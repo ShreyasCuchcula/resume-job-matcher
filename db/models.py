@@ -43,7 +43,9 @@ def _uuid_pk() -> Mapped[uuid.UUID]:
 
 
 def _created_at() -> Mapped[datetime]:
-    return mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    return mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -66,7 +68,9 @@ class Job(Base):
         back_populates="job", cascade="all, delete-orphan", passive_deletes=True
     )
     responsibilities: Mapped[list["JobResponsibility"]] = relationship(
-        back_populates="job", cascade="all, delete-orphan", passive_deletes=True,
+        back_populates="job",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
         order_by="JobResponsibility.position",
     )
     scoring_runs: Mapped[list["ScoringRun"]] = relationship(
@@ -77,8 +81,12 @@ class Job(Base):
 class JobRequirement(Base):
     __tablename__ = "job_requirements"
     __table_args__ = (
-        CheckConstraint("importance BETWEEN 1 AND 3", name="ck_job_requirements_importance"),
-        CheckConstraint("confidence BETWEEN 0 AND 1", name="ck_job_requirements_confidence"),
+        CheckConstraint(
+            "importance BETWEEN 1 AND 3", name="ck_job_requirements_importance"
+        ),
+        CheckConstraint(
+            "confidence BETWEEN 0 AND 1", name="ck_job_requirements_confidence"
+        ),
         CheckConstraint(
             "requirement_type IN ('skill', 'education', 'certification', 'license')",
             name="ck_job_requirements_type",
@@ -95,7 +103,9 @@ class JobRequirement(Base):
     importance: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     confidence: Mapped[float] = mapped_column(_FRACTION, nullable=False)
     is_required: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    allows_equivalent_experience: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    allows_equivalent_experience: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
     equivalent_years: Mapped[float | None] = mapped_column(_SCORE, nullable=True)
     degree_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
     field_of_study: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -148,11 +158,16 @@ class Resume(Base):
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     candidate_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("candidates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
-    file_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    file_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True, index=True
+    )
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
     # Nullable: ingestion (Stage 2) persists a resume as soon as text is
@@ -171,11 +186,16 @@ class EmploymentRecord(Base):
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     candidate_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("candidates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     normalized_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     original_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    company: Mapped[str | None] = mapped_column(String(255), nullable=True)  # display only, never scored
+    company: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )  # display only, never scored
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -183,7 +203,9 @@ class EmploymentRecord(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
 
     candidate: Mapped["Candidate"] = relationship(back_populates="employment_records")
-    evidence_bullets: Mapped[list["EvidenceBullet"]] = relationship(back_populates="employment")
+    evidence_bullets: Mapped[list["EvidenceBullet"]] = relationship(
+        back_populates="employment"
+    )
 
 
 class EvidenceBullet(Base):
@@ -197,17 +219,25 @@ class EvidenceBullet(Base):
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     candidate_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("candidates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     employment_id: Mapped[uuid.UUID | None] = mapped_column(
-        GUID, ForeignKey("employment_records.id", ondelete="SET NULL"), nullable=True, index=True
+        GUID,
+        ForeignKey("employment_records.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
     section_type: Mapped[str] = mapped_column(String(20), nullable=False)
     original_text: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_text: Mapped[str] = mapped_column(Text, nullable=False)
 
     candidate: Mapped["Candidate"] = relationship(back_populates="evidence_bullets")
-    employment: Mapped["EmploymentRecord | None"] = relationship(back_populates="evidence_bullets")
+    employment: Mapped["EmploymentRecord | None"] = relationship(
+        back_populates="evidence_bullets"
+    )
 
 
 class CandidateQualification(Base):
@@ -217,13 +247,21 @@ class CandidateQualification(Base):
             "qualification_type IN ('skill', 'education', 'certification', 'license')",
             name="ck_candidate_qualifications_type",
         ),
-        CheckConstraint("evidence_strength BETWEEN 0 AND 1", name="ck_candidate_qualifications_strength"),
-        CheckConstraint("confidence BETWEEN 0 AND 1", name="ck_candidate_qualifications_confidence"),
+        CheckConstraint(
+            "evidence_strength BETWEEN 0 AND 1",
+            name="ck_candidate_qualifications_strength",
+        ),
+        CheckConstraint(
+            "confidence BETWEEN 0 AND 1", name="ck_candidate_qualifications_confidence"
+        ),
     )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     candidate_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("candidates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     qualification_type: Mapped[str] = mapped_column(String(20), nullable=False)
     canonical_name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -243,7 +281,9 @@ class CandidateQualification(Base):
 class ScoringRun(Base):
     __tablename__ = "scoring_runs"
     __table_args__ = (
-        CheckConstraint("status IN ('active', 'invalidated')", name="ck_scoring_runs_status"),
+        CheckConstraint(
+            "status IN ('active', 'invalidated')", name="ck_scoring_runs_status"
+        ),
     )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
@@ -267,16 +307,26 @@ class ScoringRun(Base):
 class MatchResult(Base):
     __tablename__ = "match_results"
     __table_args__ = (
-        UniqueConstraint("run_id", "candidate_id", name="uq_match_results_run_candidate"),
+        UniqueConstraint(
+            "run_id", "candidate_id", name="uq_match_results_run_candidate"
+        ),
     )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     run_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("scoring_runs.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("scoring_runs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    job_id: Mapped[uuid.UUID] = mapped_column(GUID, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        GUID, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False
+    )
     candidate_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("candidates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     required_score: Mapped[float | None] = mapped_column(_SCORE, nullable=True)
     experience_score: Mapped[float | None] = mapped_column(_SCORE, nullable=True)
@@ -288,13 +338,19 @@ class MatchResult(Base):
 
     run: Mapped["ScoringRun"] = relationship(back_populates="match_results")
     evidence: Mapped[list["MatchEvidence"]] = relationship(
-        back_populates="match_result", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="match_result",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     missing_items: Mapped[list["MissingItem"]] = relationship(
-        back_populates="match_result", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="match_result",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     warnings: Mapped[list["ScoringWarning"]] = relationship(
-        back_populates="match_result", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="match_result",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
 
@@ -303,7 +359,10 @@ class MatchEvidence(Base):
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     match_result_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("match_results.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("match_results.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     requirement_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID, ForeignKey("job_requirements.id", ondelete="SET NULL"), nullable=True
@@ -331,7 +390,10 @@ class MissingItem(Base):
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     match_result_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("match_results.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("match_results.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     requirement_id: Mapped[uuid.UUID] = mapped_column(
         GUID, ForeignKey("job_requirements.id", ondelete="CASCADE"), nullable=False
@@ -348,7 +410,10 @@ class ScoringWarning(Base):
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     match_result_id: Mapped[uuid.UUID] = mapped_column(
-        GUID, ForeignKey("match_results.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID,
+        ForeignKey("match_results.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     code: Mapped[str] = mapped_column(String(100), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
