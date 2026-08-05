@@ -1,9 +1,7 @@
 # Resume-Job-Matcher: Project Progress Tracker
 
-**Project Start Date:** August 4, 2026  
-**Current Date:** August 4, 2026  
-**Total Time Invested So Far:** ~2 hours  
-**Estimated Total Duration:** 3.5-5 hours  
+**Status:** In Development  
+**Current Checkpoint:** A (Stages 0-2 Complete)
 
 ---
 
@@ -13,7 +11,7 @@ This document tracks detailed progress through all 10 implementation stages, wit
 
 **Architecture:** Clean layered Python application (UI → Services → Parsing/Matching → Normalization → Domain → DB)  
 **Testing Strategy:** TDD (unit tests written before implementation); fixtures provide exact numeric ground truth  
-**Version Control:** Git with clean, atomic commits; no tool co-authorship  
+**Version Control:** Git with clean, atomic commits; no tool co-authorship
 
 ---
 
@@ -21,314 +19,118 @@ This document tracks detailed progress through all 10 implementation stages, wit
 
 ### ✅ Stage 0: Project Setup & Synthetic Data
 
-**Status:** COMPLETE ✅  
-**Completed:** August 4, 2026, 3:10 AM  
-**Duration:** ~50 minutes  
-**Commits:** 4 clean, atomic commits  
+**Status:** COMPLETE
 
 #### What Was Built
 
-1. **Project Folder Structure (Commit 1: "Foundation scaffolding")**
-   - ✅ All 10 module folders created per SPECIFICATION.md Section 4:
-     - `config/` — Environment, taxonomies, settings
-     - `db/` — SQLAlchemy models, Alembic migrations, repositories
-     - `domain/` — Pydantic schemas, enums, exceptions
-     - `ingestion/` — File validation, PDF/DOCX readers, hashing
-     - `parsing/` — Job/resume parsers, requirement extractors, PII stripping
-     - `normalization/` — Skills, titles, dates, text normalization
-     - `matching/` — Qualification/experience/responsibility scorers
-     - `services/` — Use-case orchestration (job, candidate, scoring, export)
-     - `ui/` — Streamlit pages (5 pages + components)
-     - `tests/` — Unit, integration, acceptance tests + fixtures
-   - ✅ Root files created:
-     - `requirements.txt` — Pinned versions (streamlit 1.37.*, pandas 2.2.*, sqlalchemy 2.0.*, etc.)
-     - `.gitignore` — Python-specific (venv/, *.db, __pycache__, uploads/, .env)
-     - `.env.example` — Template for DATABASE_URL, UPLOAD_DIR, LOG_LEVEL
-     - `setup.sh` — One-command setup: venv creation, pip install, spacy model, migration
-     - `app.py` — Streamlit entry point (placeholder for multipage routing)
-     - `alembic.ini` — Migration configuration (not initialized yet; Stage 2)
-     - `pyproject.toml` — Ruff/Black/pytest configuration
+1. **Project Folder Structure**
+   - Module skeleton per SPECIFICATION.md Section 4: `config/`, `db/`, `domain/`, `ingestion/`, `parsing/`, `normalization/`, `matching/`, `services/`, `ui/` (with `pages/` and `components/`), `tests/` (with `unit/`, `integration/`, `acceptance/`, `fixtures/`), `sample_data/` (with `jobs/`, `synthetic_resumes/`)
+   - Root files: `requirements.txt` (pinned dependencies), `.gitignore` (Python-specific: venv/, *.db, __pycache__, uploads/, .env), `.gitattributes` (forces *.pdf/*.docx/*.doc to binary), `.env.example` (DATABASE_URL, UPLOAD_DIR, SCORING_CONFIG_PATH, LOG_LEVEL), `setup.sh` (one-command setup: venv, pip install, spaCy model, .env bootstrap)
 
-2. **Environment & Dependencies (Commit 1 continuation)**
-   - Python version: 3.13.7 (exceeds spec requirement of 3.11+)
-   - `requirements.txt` pinned to exact versions for reproducibility
-   - **Key deviation documented:** spacy pinned to `3.8.*` instead of spec's `3.7.*`
-     - **Reason:** Python 3.13 has no wheel for spacy 3.7; only 3.8+ supports cp313
-     - **Approval:** Yes, documented and verified to work
+2. **Environment & Dependencies**
+   - Python 3.13.7 (exceeds spec's 3.11+ requirement)
+   - **Documented deviation:** spaCy pinned to `3.8.*` instead of the spec's `3.7.*` - spaCy 3.7 has no prebuilt wheel for Python 3.13 and fails to build from source; 3.8.x is API-compatible for this project's usage (sentence segmentation, lemmatization, PERSON NER) and has cp313 wheels.
+   - `setup.sh`'s spaCy model download falls back to installing the model wheel directly via pip when `spacy download` fails on networks that intercept TLS to `raw.githubusercontent.com`.
 
-3. **Network/TLS Issue Fix (Commit 2: "A network fix — spacy TLS interception workaround")**
-   - **Problem Identified:** `python -m spacy download en_core_web_sm` fails with `SSL_CERT_VERIFY_FAILED` on networks with TLS interception proxies
-   - **Root Cause:** spacy download hits `raw.githubusercontent.com` directly via requests library; proxy intercepts and blocks
-   - **Solution Implemented:** Fallback mechanism in `setup.sh`
-     - First attempts standard `spacy download`
-     - On failure, falls back to installing model wheel via pip from PyPI
-     - pip traffic succeeds through the same proxy chain used for all other packages
-   - **Verification:** setup.sh tested end-to-end in dev environment; both paths confirmed working
-   - **Impact:** Zero friction on first-time setup for users behind TLS-intercepting firewalls
+3. **Synthetic Data Generator** (`sample_data/generate.py`, deterministic, fixed seed)
+   - **6 job descriptions** (`sample_data/jobs/`), varied heading styles per Section 10.2:
+     - `job_01_data_analyst_standard.txt` - standard Requirements/Responsibilities/Preferred headings
+     - `job_02_data_analyst_altheadings.txt` - alternate headings, no preferred section
+     - `job_03_data_engineer.txt` - Minimum Qualifications/Key Activities/Nice to Have
+     - `job_04_bi_analyst.txt` - Must Have/The Role/Bonus Points, no experience minimum stated
+     - `job_05_data_scientist.txt` - Requirements/Duties/Desired, includes a "degree or equivalent experience" clause
+     - `job_06_software_engineer.txt` - What You Need/Responsibilities/A Plus, PMP as a preferred cert
+   - **20 candidate resumes** (PDF via PyMuPDF, DOCX via python-docx) spanning: strong match, good-but-gaps, keyword-stuffer (skills list only, no evidence bullets), career-changer, missing dates, year-only dates, no section headings, table-based DOCX skills section, degree-or-equivalent, PMP-candidate
+   - **6 deliberately broken ingestion edge cases** (`sample_data/synthetic_resumes/`):
+     - `job1_strong_match_analyst_duplicate.pdf` - exact byte-for-byte duplicate of an accepted PDF (SHA-256 collision)
+     - `edge_corrupt_file.pdf` - `.pdf` extension and `%PDF` header, but not a real PDF structure
+     - `edge_password_protected.pdf` - valid, AES-256 encrypted PDF (`needs_pass` True)
+     - `edge_probable_scan.pdf` - valid PDF, extracts to well under the 200-character minimum
+     - `edge_renamed_txt_as_pdf.pdf` - plain text saved with a `.pdf` extension (fails the magic-byte check)
+     - `edge_unsupported_filetype.doc` - legacy `.doc` extension, not in the allowed set
+   - **26 total resume files**, all verified against the real extraction contracts at generation time
 
-4. **Synthetic Data Generator (Commit 3: "Synthetic data generator + output")**
-   - **Generator:** `sample_data/generate.py` (deterministic, fixed seed, reproducible)
-   
-   **6 Job Descriptions Generated:**
-   - `jobs/data_analyst_1.txt` — Standard format (Requirements/Responsibilities/Preferred), ~3 years minimum
-   - `jobs/data_analyst_2.txt` — Alternate headings (no "Preferred" section) → tests weight redistribution
-   - `jobs/data_engineer.txt` — Standard format, ~5 years minimum, includes "degree or equivalent" clause
-   - `jobs/bi_analyst.txt` — Standard format, ~2 years minimum
-   - `jobs/data_scientist.txt` — Standard format, ~4 years minimum
-   - `jobs/software_engineer.txt` — Standard format, no experience minimum stated → tests `None` handling
-   
-   **Varied heading styles** (per SPECIFICATION.md Section 8.1):
-   - "Requirements" vs "Qualifications" vs "Required Skills"
-   - "Responsibilities" vs "Duties" vs "What You'll Do"
-   - "Preferred" vs "Nice to Have" vs "Bonus"
-   
-   **20 Realistic Candidate Resumes (PDF via PyMuPDF, DOCX via python-docx):**
-   - Strong matches (all required skills, sufficient years, relevant bullets)
-   - Good-but-gaps (some missing preferreds, slightly under-experienced)
-   - Keyword-stuffers (skill list only, no evidence bullets) → tests evidence-strength scoring
-   - Career-changers (unrelated background, demonstrable reskilling)
-   - Missing dates (resume has gaps, no end dates on recent roles)
-   - Year-only dates (e.g., "2020-2023" vs "Jan 2020 - Mar 2023") → tests date confidence lowering
-   - No section headings (dates + skills embedded in paragraphs) → tests heading detection robustness
-   - Table-based DOCX (skills in table cells, not paragraphs) → tests python-docx table extraction
-   - Degree-or-equivalent cases (resume claims "5 years as X, equivalent to degree")
-   - PMP-candidate case (resume lists "PMP candidate" not "PMP certified") → tests pending credential warning
-   
-   **6 Deliberately Broken Edge Cases (ingestion validation test coverage):**
-   - **Exact duplicate:** Candidate 001 and 018 are byte-identical PDFs → SHA256 hash collision detection
-   - **Corrupt PDF:** Truncated file, missing xref table → PyMuPDF raises exception on open
-   - **Password-protected PDF:** Encrypted with password; extraction requires auth → validation reports `needs_password`
-   - **Near-empty scan:** Single-page image PDF, <200 extracted chars → classified as "probable_scan", rejected
-   - **Renamed extension:** `.txt` file renamed to `.pdf` → magic-byte check fails (PDF signature != "%PDF")
-   - **Unsupported extension:** `.doc` (legacy Word binary) instead of `.docx` → format check rejects it
-   
-   **Git attributes added:** `.gitattributes` forces `*.pdf`, `*.docx`, `*.doc` to binary to prevent line-ending corruption on Windows checkout
-
-5. **Expected Rankings & Ground Truth (Commit 4: "expected_rankings.md — hand-computed ground truth")**
-   - **File:** `sample_data/expected_rankings.md`
-   - **Purpose:** Master fixture for acceptance testing; source of truth for all fixture numbers
-   - **Content:**
-     - Full ingestion-status table for all 26 resume files (expected outcomes for duplicate, corrupt, scan, etc.)
-     - Hand-computed scored rankings for 3 jobs:
-       - Data Analyst: 20+ candidates ranked with full score breakdowns
-       - Data Engineer: 20+ candidates ranked with full score breakdowns
-       - Data Scientist: 20+ candidates ranked with full score breakdowns
-     - Each ranking includes:
-       - Candidate identifier (e.g., "Candidate 001")
-       - Final score (0–100)
-       - Component scores: required_score, experience_score, responsibility_score, preferred_score
-       - Applied weights (sums to 1.0)
-       - Evidence count and types
-       - Missing items and warnings
-     - Hand-reasoned per SPECIFICATION.md Sections 11–13 (exact formulas)
-   - **Caveat:** Scores computed deterministically from formulas for required/experience/preferred; responsibility similarity estimated (TF-IDF vectorizer doesn't exist yet)
-   - **Known gap:** No required-license fixture yet (no job in batch has a required certification); flagged for future refinement
-   - **Mapped to acceptance scenarios:** Cross-references all 8 acceptance scenarios from SPECIFICATION.md Section 18.3
-
-#### Verification & Testing
-
-**Local Verification (Completed):**
-```bash
-# Folder structure verified
-dir  # All 10 folders present, all root files present
-
-# Synthetic data verified
-dir sample_data/jobs/          # 6 .txt files present
-dir sample_data/synthetic_resumes/  # 26 PDF/DOCX files present
-type sample_data/expected_rankings.md  # Ground truth document readable
-
-# Requirements verified
-py -m pip list | grep streamlit  # 1.37.0 installed
-py -m pip list | grep sqlalchemy  # 2.0.23 installed
-# All pinned versions verified
-```
-
-**Git History Verified:**
-```bash
-git log --oneline -4
-# Should show:
-# 49150bd Stage 0: scaffold project structure and environment setup
-# f141871 Fix setup.sh spaCy model download on TLS-intercepting networks
-# 5a5e826 Stage 0: add synthetic data generator and generated sample data
-# 0c40bc8 Stage 0: add expected_rankings.md ground truth
-```
-
-**File Content Audit:**
-- ✅ All 26 resume files are valid, extractable (confirmed by generator output)
-- ✅ Corrupt/scan/password files confirmed to trigger expected validation errors
-- ✅ Duplicate SHA256 hashes verified identical
-- ✅ expected_rankings.md formulas traced back to SPECIFICATION.md Sections 11–13
+4. **`sample_data/expected_rankings.md`** - hand-reasoned acceptance-test ground truth: expected ingestion status for all 26 files, plus full ranked score walkthroughs (required/experience/responsibility/preferred/final) for 3 jobs (Data Analyst, Data Engineer, Data Scientist), cross-referenced against all 8 acceptance scenarios in Section 18.3
 
 #### Known Issues & Resolutions
 
-1. **Issue: `python --version` not found on Windows**
-   - **Symptom:** "python: command not found" in PowerShell
-   - **Solution:** Use `py --version` instead (Windows Python launcher)
-   - **Status:** ✅ RESOLVED — all commands updated to use `py`
-
-2. **Issue: `ls -la` not recognized on Windows PowerShell**
-   - **Symptom:** "Get-ChildItem: A parameter cannot be found that matches parameter name 'la'"
-   - **Solution:** Use `dir` (Windows command) or `ls -Force` (PowerShell equivalent)
-   - **Status:** ✅ RESOLVED — all setup docs updated
-
-3. **Issue: spacy 3.7 wheel missing for Python 3.13**
-   - **Symptom:** `pip install spacy==3.7.*` fails; no cp313 wheel available
-   - **Solution:** Pin to spacy 3.8.* (latest, fully compatible, more stable)
-   - **Status:** ✅ RESOLVED — deviation documented in requirements.txt and this file
-
-4. **Issue: Claude Code adding co-author trailers to commits**
-   - **Symptom:** GitHub shows "ShreyasCuchcula and claude" on all Stage 0 commits
-   - **Solution:** 
-     - Locally rewrote commits via `git filter-branch` to strip `Co-Authored-By:` trailers
-     - Force-pushed with `git push --force-with-lease origin main`
-   - **Status:** ✅ RESOLVED — all commits now show only author name
-   - **Prevention:** Git config set; Claude Code instructions include explicit "no co-author" directive
-
-#### Environment Setup Checklist
-
-- ✅ Virtual environment created: `py -m venv venv`
-- ✅ Virtual environment activated: `venv\Scripts\activate` (shows `(venv)` prefix)
-- ✅ Requirements installed: `pip install -r requirements.txt` (verified end-to-end)
-- ✅ Git configured: `git config user.name` and `git config user.email` set
-- ✅ Git config locked: `git config --local user.useConfigOnly true` (prevents accidental co-authors)
-- ✅ Repository initialized: `.git/` folder present, 6 commits on main branch
-- ✅ GitHub remote configured: `origin` points to `https://github.com/ShreyasCuchcula/resume-job-matcher.git`
-- ✅ GitHub mirror verified: All commits visible on GitHub, no pending local changes
-
-#### Dependencies Summary
-
-| Package | Version | Purpose | Status |
-|---------|---------|---------|--------|
-| streamlit | 1.37.* | Web UI framework | ✅ Installed |
-| pandas | 2.2.* | Ranking tables, CSV export | ✅ Installed |
-| pymupdf | 1.24.* | PDF text extraction | ✅ Installed |
-| python-docx | 1.1.* | DOCX text extraction | ✅ Installed |
-| spacy | 3.8.* | Sentence segmentation, PII NER | ✅ Installed |
-| scikit-learn | 1.5.* | TF-IDF vectorizer, cosine similarity | ✅ Installed |
-| sqlalchemy | 2.0.* | ORM, database abstraction | ✅ Installed |
-| psycopg[binary] | 3.2.* | PostgreSQL adapter (for production) | ✅ Installed |
-| alembic | 1.13.* | Database migrations | ✅ Installed |
-| pydantic | 2.8.* | Data validation schemas | ✅ Installed |
-| pydantic-settings | 2.4.* | Env var + YAML config loading | ✅ Installed |
-| pyyaml | 6.0.* | YAML parsing (scoring.yaml) | ✅ Installed |
-| python-dateutil | 2.9.* | Date parsing utilities | ✅ Installed |
-| pytest | 8.3.* | Unit/integration/acceptance testing | ✅ Installed |
-| ruff | 0.5.* | Linting | ✅ Installed |
-| black | 24.* | Code formatting | ✅ Installed |
-
-**Post-install step:** `python -m spacy download en_core_web_sm` (or fallback to pip install if network blocks direct download)  
-**Status:** ✅ Automated in setup.sh, tested end-to-end
-
-#### Exit Criteria (Checkpoint A, Stage 0)
-
-- ✅ App boots: `streamlit run app.py` (will show blank app; pages built in Stage 9)
-- ✅ Migration from empty DB succeeds: `alembic upgrade head` (migration created in Stage 2)
-- ✅ Every synthetic file gets correct status: ingestion logic built in Stage 2
-- ✅ Bad files never block batch: transaction rollback logic built in Stage 2
-- **Stage 0 specific:**
-  - ✅ Project structure matches spec Section 4
-  - ✅ All 26 synthetic files generated and verified
-  - ✅ expected_rankings.md with ground truth ready for Stage 8 acceptance tests
-  - ✅ setup.sh tested end-to-end, works on TLS-intercepting networks
+1. **spaCy 3.7 has no Python 3.13 wheel.** Resolved by pinning `spacy==3.8.*` (documented deviation, approved).
+2. **`spacy download` fails behind TLS-intercepting networks** (`SSL_CERT_VERIFY_FAILED` hitting `raw.githubusercontent.com`). Resolved with a fallback in `setup.sh` that installs the model wheel directly via pip.
+3. **Two small edge-case PDFs were being misdetected as text by git**, risking corruption via `autocrlf` on checkout. Resolved by adding `.gitattributes` forcing `*.pdf`/`*.docx`/`*.doc` to binary.
+4. **Commits initially carried a tool co-author trailer.** Resolved: commit messages and authorship now show only the project author, with no trailers, going forward.
 
 ---
 
-### ⏳ Stage 1: Configuration & Taxonomies
+### ✅ Stage 1: Configuration & Taxonomies
 
-**Status:** PENDING (Ready to start)  
-**Estimated Duration:** 15-25 minutes  
-**Estimated Start:** After Stage 0 verification  
+**Status:** COMPLETE
 
-#### What Will Be Built
+#### What Was Built
 
-1. **Taxonomies (`config/taxonomy/*.json`)**
-   - `skills.json` (~150-200 skill entries)
-   - `degrees.json` (education level ladder)
-   - `fields.json` (field-of-study relatedness)
-   - `certifications.json` (~25 certs/licenses)
-   - `titles.json` (job title canonicalization)
-   - `phrase_normalization.json` (phrase aliases)
-   - `VERSION` (taxonomy version string)
+1. **Taxonomies** (`config/taxonomy/`), self-validated as alias-collision-free at generation time:
+   - `skills.json` - 178 canonical skills (programming languages, databases, BI tools, cloud/DevOps, ML/AI, data engineering, web frameworks, business tools) with aliases, categories, and taxonomy-approved `related_skills` partial-credit pairs
+   - `degrees.json` - `high_school < associate < bachelor < master < doctorate` ladder with alias maps
+   - `fields.json` - 13 fields of study with `related` (1.00) / `somewhat_related` (0.75) relatedness tiers, each direction listed explicitly
+   - `certifications.json` - 26 certs/licenses with aliases and explicit equivalents/related partial-credit pairs
+   - `titles.json` - 26 canonical job titles with aliases and `related_titles` for experience role-relevance matching
+   - `phrase_normalization.json` - 35 controlled phrase mappings for TF-IDF pre-processing
+   - `VERSION` - `tax-1.0`
 
-2. **Pydantic Schemas (`domain/schemas.py`)**
-   - All enums (RequirementType, EvidenceSection, RunStatus, FileStatus)
-   - All data classes from SPECIFICATION.md Section 5
-   - Validators for schema invariants
+2. **Domain layer** (`domain/`):
+   - `enums.py` - `RequirementType`, `EvidenceSection`, `RunStatus`, `FileStatus`, `MissingItemStatus`, `EmploymentSectionType` (Literal aliases)
+   - `exceptions.py` - `DomainError`, `ValidationError`, `ParsingError`, `CorruptFileError`, `UnscorableJobError`
+   - `schemas.py` - every pydantic v2 model from SPECIFICATION.md Section 5, with `extra="forbid"` and validators enforcing every stated invariant (score ranges, importance ∈ {1,2,3}, non-empty evidence text, `applied_weights` summing to 1.0 ± 1e-9, final_score rounded to 2dp)
 
-3. **Config Settings (`config/settings.py`)**
-   - pydantic-settings for .env + scoring.yaml loading
-   - DATABASE_URL validation
-   - UPLOAD_DIR creation
-   - Startup validation
+3. **Config** (`config/`):
+   - `scoring.yaml` - weights, responsibility-matching thresholds, evidence-strength tiers, job-parsing confidence bands, upload limits, descriptive labels, matching Section 7.1 exactly
+   - `settings.py` - pydantic-settings loader (`DATABASE_URL`, `UPLOAD_DIR`, `SCORING_CONFIG_PATH`, `LOG_LEVEL`); fail-fast `get_app_config()` validates weights/thresholds/labels and re-validates taxonomy alias-collision-freedom on load
 
-4. **Scoring Config (`config/scoring.yaml`)**
-   - Weights (required/experience/responsibility/preferred)
-   - Thresholds and limits
-   - Version pinning
+4. **Database layer** (`db/`):
+   - `base.py` - `GUID` TypeDecorator (native `UUID` on Postgres, `CHAR(36)` elsewhere), `portable_json()` (`JSON` on SQLite, `JSONB` on Postgres)
+   - `session.py` - engine/sessionmaker factory built from settings
+   - `models.py` - all 13 ORM tables from Section 6.1, with FKs, the `(run_id, candidate_id)` unique constraint, and CHECK constraints mirroring the domain enums/numeric ranges
+   - Alembic initialized; migration `0001_initial_schema` creates the full schema
 
-5. **SQLAlchemy Models (`db/models.py`)**
-   - 13 ORM models per SPECIFICATION.md Section 6
-   - GUID TypeDecorator for portable UUIDs
-   - Relationships and constraints
+#### Verification
 
-6. **Alembic Setup**
-   - Initialize Alembic (if not already done in setup.sh)
-   - Create migration 0001_initial_schema.py
-   - Test on both SQLite and PostgreSQL
+- Every fail-fast config branch tested directly: bad weight sum, negative weight, out-of-range threshold, non-descending labels, missing taxonomy file, invalid JSON, alias collision, missing VERSION file - each raises with a specific message.
+- Migration round-trips cleanly on SQLite (upgrade/downgrade/upgrade); all 13 tables' DDL compiles cleanly against the PostgreSQL dialect, with `GUID` rendering as native `UUID` and JSON columns rendering as `JSONB`.
+- Full ORM smoke test: insert across the whole graph (job → candidate → scoring run → match result → evidence/warnings), UNIQUE and CHECK constraints enforced at the DB level, cascade delete verified end-to-end (deleting a candidate removes its resumes, employment records, evidence bullets, qualifications, match results, match evidence, and scoring warnings, while leaving unrelated jobs untouched).
 
-#### Acceptance Criteria
+#### Known Issues & Resolutions
 
-- ✅ All taxonomy files load without error on startup
-- ✅ Config settings validate; app fails fast on bad config
-- ✅ SQLAlchemy models align with SPECIFICATION.md Section 6 exactly
-- ✅ Alembic migration creates schema on both SQLite and PostgreSQL
-- ✅ No import errors when running `from config.settings import *`
+1. **Alembic's autogenerated migration 0001 had two missing imports** (`db.base` for the custom `GUID` type, `Text` for the JSONB `astext_type` argument) that would have raised `NameError` on a clean checkout. Fixed by adding the missing imports.
 
 ---
 
-### ⬜ Stage 2: Database & Ingestion Pipeline
+### ✅ Stage 2: Database & Ingestion Pipeline
 
-**Status:** NOT STARTED  
-**Estimated Duration:** 15-25 minutes  
-**Prerequisite:** Stage 1 complete  
+**Status:** COMPLETE
 
-#### What Will Be Built
+#### What Was Built
 
-1. **File Ingestion & Validation (`ingestion/validation.py`)**
-   - Extension checks (allow only .pdf, .docx)
-   - Magic-byte signature verification
-   - File size limits (≤10 MB per file)
-   - Corrupt file detection (PDF xref checks, DOCX ZIP validation)
-   - Probable-scan detection (<200 extracted chars)
+1. **`ingestion/validation.py`** - pure, side-effect-free checks: extension allowlist, 10 MB size limit, magic-byte signature verification (PDF `%PDF`, DOCX ZIP containing `word/document.xml` - extension is never trusted alone), and the 200-character probable-scan threshold.
+2. **`ingestion/pdf_reader.py`** - PyMuPDF extraction matching the exact Section 8.2 contract; raises `CorruptFileError("password-protected")` for encrypted PDFs and wraps any other extraction failure in the same exception type; `pdf_needs_password()` for a non-raising check.
+3. **`ingestion/docx_reader.py`** - python-docx extraction matching the exact Section 8.2 contract; combines paragraph text and table-cell text into one stream.
+4. **`ingestion/hashing.py`** - SHA-256 hashing, `{sha256}.{ext}` server-generated naming, duplicate-hash checking. Deliberately has no DB dependency, per the layering rule that only `services` may call `db`.
+5. **`services/candidate_service.py`** - batch orchestration:
+   - Runs every uploaded file through the full validation → hash/dedupe (within-batch and against every hash already persisted from a prior run) → extraction → probable-scan sequence, returning a per-file status/code/message for every file in the order given. One file's unexpected failure never stops the rest of the batch.
+   - Persists every accepted file's `Candidate` + `Resume` row in a single DB transaction: the whole accepted set commits together or not at all. On failure, the transaction rolls back, every file written to `uploads/` during that call is removed, and the affected results are downgraded to `status="failed"`.
+   - Display identifiers (`Candidate 001`, `Candidate 002`, ...) are assigned by ascending SHA-256 across the accepted batch, per Section 14.3.
+6. **Migration `0002`** - makes `resumes.parsed_json` and `resumes.parser_version` nullable. Ingestion persists a resume as soon as text is extracted, before the resume parser (a later stage) exists to produce the full `CandidateProfile` those two columns hold; the parser will fill them in via an `UPDATE` once built. Verified via `batch_alter_table` (SQLite has no `ALTER COLUMN` and needs a table rebuild; on Postgres it compiles to a plain `ALTER COLUMN ... DROP NOT NULL`).
+7. **Test suite** - `tests/conftest.py` (in-memory DB + sample-resumes fixtures) plus unit tests for every ingestion module and an integration suite running the full 26-file `sample_data` batch end-to-end. 42 tests total, all passing.
 
-2. **PDF Reader (`ingestion/pdf_reader.py`)**
-   - PyMuPDF-based text extraction
-   - Handles corrupted PDFs gracefully
-   - Detects password-protected PDFs
+#### Verification
 
-3. **DOCX Reader (`ingestion/docx_reader.py`)**
-   - python-docx paragraph extraction
-   - Table cell extraction
-   - Handles malformed DOCX structures
+- All 26 synthetic files classified with the exact status documented in `expected_rankings.md`.
+- Duplicate detection verified both within a single batch and across two separate batches against the DB.
+- Display-identifier ordering, on-disk file naming, and DB row counts all verified against the real batch.
+- Transactional rollback verified via a mocked `Session.commit()` failure: zero partial DB rows, zero orphaned files on disk, accurate per-file status reporting for the rest of the batch.
+- Re-uploading an identical batch correctly marks every file as a duplicate against the DB with no new rows created.
 
-4. **Hashing & Duplicate Detection (`ingestion/hashing.py`)**
-   - SHA256 file hashing
-   - Duplicate detection via hash comparison
-   - File storage with server-generated names
+#### Known Issues & Resolutions
 
-5. **Ingestion Service Integration**
-   - Batch file processing
-   - Per-file status reporting
-   - Transaction-safe writes
-   - Rollback on any failure
-
-#### Acceptance Criteria
-
-- ✅ All 26 synthetic files classified with correct status (accepted, duplicate, corrupt, scan, etc.)
-- ✅ One corrupt file never blocks the batch
-- ✅ Duplicate detection identifies byte-identical files
-- ✅ Password-protected PDF reports `needs_password`, doesn't crash
-- ✅ Probable-scan PDF rejected with "probable_scan" status
+1. **A pre-existing, stale `git rebase -i` state** (an abandoned interactive rebase with a leftover Vim swap file) was found in `.git/rebase-merge/`, predating this stage's work. It does not affect `HEAD` or branch history (confirmed: `HEAD` is a normal branch ref, and every commit/push since has worked correctly) but does make `git status` report a misleading "currently rebasing" message. **Do not run `git rebase --abort`** - its recorded `orig-head` is several commits behind current `main`, so an abort would hard-reset `main` backward and discard real, already-pushed work. If cleanup is wanted, the safe fix is deleting the stale directory directly: `rm -rf .git/rebase-merge`.
 
 ---
 
@@ -337,8 +139,7 @@ git log --oneline -4
 ### ⬜ Stage 3: Job Parser
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 20-30 minutes  
-**Prerequisite:** Stages 0-2 complete  
+**Prerequisite:** Stages 0-2 complete
 
 #### What Will Be Built
 
@@ -351,20 +152,19 @@ git log --oneline -4
 
 #### Acceptance Criteria
 
-- ✅ "Must have SQL" → required qualification: SQL (importance=3)
-- ✅ "Python is a plus" → preferred qualification: Python
-- ✅ "Python is preferred" in Requirements section → overrides heading, marked preferred
-- ✅ "3+ years" → minimum_relevant_years = 3.0
-- ✅ Benefits text yields no qualifications
-- ✅ All tests from SPECIFICATION.md Section 18.1 pass
+- "Must have SQL" → required qualification: SQL (importance=3)
+- "Python is a plus" → preferred qualification: Python
+- "Python is preferred" in Requirements section → overrides heading, marked preferred
+- "3+ years" → minimum_relevant_years = 3.0
+- Benefits text yields no qualifications
+- All tests from SPECIFICATION.md Section 18.1 pass
 
 ---
 
 ### ⬜ Stage 4: Resume Parser & PII Stripping
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 20-30 minutes  
-**Prerequisite:** Stages 0-3 complete  
+**Prerequisite:** Stages 0-3 complete
 
 #### What Will Be Built
 
@@ -377,23 +177,22 @@ git log --oneline -4
 
 #### Acceptance Criteria
 
-- ✅ "PowerBI" normalized to "power bi"
-- ✅ Skills in experience bullets = 1.00 confidence
-- ✅ Skills in skills-section-only = 0.80 confidence
-- ✅ Skills in summary = 0.90 confidence
-- ✅ "PMP candidate" (not certified) flagged with warning, not held
-- ✅ Year-only dates (e.g., "2020") parsed with lowered confidence
-- ✅ Graduation year absent from scoring text
-- ✅ Email, phone, name stripped before scoring
-- ✅ All tests from SPECIFICATION.md Section 18.1 pass
+- "PowerBI" normalized to "power bi"
+- Skills in experience bullets = 1.00 confidence
+- Skills in skills-section-only = 0.80 confidence
+- Skills in summary = 0.90 confidence
+- "PMP candidate" (not certified) flagged with warning, not held
+- Year-only dates (e.g., "2020") parsed with lowered confidence
+- Graduation year absent from scoring text
+- Email, phone, name stripped before scoring
+- All tests from SPECIFICATION.md Section 18.1 pass
 
 ---
 
 ### ⬜ Stage 5: Qualification Matcher & Scorer
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 15-25 minutes  
-**Prerequisite:** Stages 0-4 complete  
+**Prerequisite:** Stages 0-4 complete
 
 #### What Will Be Built
 
@@ -404,19 +203,18 @@ git log --oneline -4
 
 #### Acceptance Criteria
 
-- ✅ Fixture score = 94.29 reproduced exactly
-- ✅ Repeated skills counted once
-- ✅ Empty category → `None` (not 0)
-- ✅ Education level × field calculation (one-level-below = 0.50, somewhat-related = 0.75)
-- ✅ All tests from SPECIFICATION.md Section 18.1 pass
+- Fixture score = 94.29 reproduced exactly
+- Repeated skills counted once
+- Empty category → `None` (not 0)
+- Education level × field calculation (one-level-below = 0.50, somewhat-related = 0.75)
+- All tests from SPECIFICATION.md Section 18.1 pass
 
 ---
 
 ### ⬜ Stage 6: Education Validator
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 10-15 minutes  
-**Prerequisite:** Stages 0-5 complete  
+**Prerequisite:** Stages 0-5 complete
 
 #### What Will Be Built
 
@@ -427,17 +225,16 @@ git log --oneline -4
 
 #### Acceptance Criteria
 
-- ✅ Fixture score = 72.00 reproduced exactly
-- ✅ "Degree or equivalent X years" satisfied through years_experience
-- ✅ All tests from SPECIFICATION.md Section 18.1 pass
+- Fixture score = 72.00 reproduced exactly
+- "Degree or equivalent X years" satisfied through years_experience
+- All tests from SPECIFICATION.md Section 18.1 pass
 
 ---
 
 ### ⬜ Stage 7: Experience Scorer
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 15-20 minutes  
-**Prerequisite:** Stages 0-6 complete  
+**Prerequisite:** Stages 0-6 complete
 
 #### What Will Be Built
 
@@ -448,20 +245,19 @@ git log --oneline -4
 
 #### Acceptance Criteria
 
-- ✅ Fixture: 2.5 years / 3 required = 83.33% score
-- ✅ Fixture: 5 years / 3 required = 100.00% score
-- ✅ Overlapping intervals merged correctly: [2019-01 to 2021-06] + [2020-01 to 2022-01] = 3.0 years
-- ✅ End-before-start discarded with warning
-- ✅ No minimum stated → `None`
-- ✅ All tests from SPECIFICATION.md Section 18.1 pass
+- Fixture: 2.5 years / 3 required = 83.33% score
+- Fixture: 5 years / 3 required = 100.00% score
+- Overlapping intervals merged correctly: [2019-01 to 2021-06] + [2020-01 to 2022-01] = 3.0 years
+- End-before-start discarded with warning
+- No minimum stated → `None`
+- All tests from SPECIFICATION.md Section 18.1 pass
 
 ---
 
 ### ⬜ Stage 8: Responsibility Scorer & Final Score & Persistence
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 20-30 minutes  
-**Prerequisite:** Stages 0-7 complete  
+**Prerequisite:** Stages 0-7 complete
 
 #### What Will Be Built
 
@@ -474,17 +270,17 @@ git log --oneline -4
 
 #### Acceptance Criteria
 
-- ✅ Fixture: responsibility_score = 66.33 reproduced exactly
-- ✅ Fixture: final_score = 83.17 reproduced exactly
-- ✅ Fixture: applied_weights = {required: 0.5294, experience: 0.2353, responsibility: 0.2353, preferred: 0.2353}
-- ✅ Weights always sum to 1.0 ± 1e-9
-- ✅ All four components present → defaults unchanged
-- ✅ Preferred absent → redistribute to other three (formula per Section 12.2)
-- ✅ All-`None` → UnscorableJobError
-- ✅ One TF-IDF vectorizer per run (asserted by object identity)
-- ✅ Full run persistence in one transaction; any failure rolls back entire run
-- ✅ Re-runs on same data produce bit-identical results
-- ✅ All tests from SPECIFICATION.md Section 18.1 & 18.2 pass
+- Fixture: responsibility_score = 66.33 reproduced exactly
+- Fixture: final_score = 83.17 reproduced exactly
+- Fixture: applied_weights = {required: 0.5294, experience: 0.2353, responsibility: 0.2353} when preferred is absent
+- Weights always sum to 1.0 ± 1e-9
+- All four components present → defaults unchanged
+- Preferred absent → redistribute across the other three (Section 13.5 formula)
+- All-`None` → UnscorableJobError
+- One TF-IDF vectorizer per run (asserted by object identity)
+- Full run persistence in one transaction; any failure rolls back the entire run
+- Re-runs on same data produce bit-identical results
+- All tests from SPECIFICATION.md Section 18.1 & 18.2 pass
 
 ---
 
@@ -493,112 +289,49 @@ git log --oneline -4
 ### ⬜ Stage 9: Streamlit UI (5 Pages)
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 40-60 minutes  
-**Prerequisite:** Stages 0-8 complete  
+**Prerequisite:** Stages 0-8 complete
 
 #### What Will Be Built
 
-1. **Page 1: Create Job** (app routing entry point)
-   - Textarea: paste job description
-   - Button: "Analyze Description"
-   - Transitions to Page 2
-
-2. **Page 2: Confirm Job**
-   - Display extracted: title, required, preferred, minimum years, responsibilities
-   - Show extraction confidence for each element
-   - Buttons: Edit / Delete / Reclassify (optional)
-   - Button: "Confirm and Continue" (freezes job)
-   - Transitions to Page 3
-
-3. **Page 3: Upload Resumes**
-   - File uploader (multi-file)
-   - Button: "Validate & Parse Files"
-   - Display per-file status table (accepted, duplicate, corrupt, scan, etc.)
-   - Button: "Score Candidates"
-   - Transitions to Page 4
-
-4. **Page 4: Rankings**
-   - Ranked table (candidate, final_score, component scores)
-   - Sortable, selectable
-   - Button per candidate: "View Details"
-   - Transitions to Page 5
-   - Mandatory oversight notice (Section 17.3)
-
-5. **Page 5: Candidate Details**
-   - Candidate name (display identifier)
-   - Full score breakdown (4 components + final)
-   - Evidence cards (one per matched requirement + responsibility)
-   - Missing items (not identified, unclear, pending)
-   - Warnings (year-only dates, PMP candidate, etc.)
-   - Button: "Download CSV"
-   - Button: "Back to Rankings"
+1. **Page 1: Create Job** - textarea for job description, "Analyze Description" button
+2. **Page 2: Confirm Job** - extracted required/preferred/minimum years/responsibilities with confidence, edit/delete/reclassify, "Confirm and Continue" freezes the job
+3. **Page 3: Upload Resumes** - multi-file uploader, per-file status table, "Score Candidates" button
+4. **Page 4: Rankings** - ranked table, mandatory oversight notice (Section 17.3), CSV download
+5. **Page 5: Candidate Details** - full score breakdown, evidence cards, missing items, warnings
 
 #### Acceptance Criteria
 
-- ✅ All 5 pages render without error
-- ✅ Full recruiter flow demoable end-to-end on synthetic data in <5 minutes
-- ✅ Evidence display shows source text for every nonzero match
-- ✅ Missing items clearly marked as unverified
-- ✅ Warnings displayed with codes and messages
-- ✅ Mandatory oversight notice present on rankings page
-- ✅ CSV export matches persisted values exactly
+- All 5 pages render without error
+- Full recruiter flow demoable end-to-end on synthetic data in under 5 minutes
+- Evidence display shows source text for every nonzero match
+- Missing items clearly marked as unverified
+- Warnings displayed with codes and messages
+- Mandatory oversight notice present on rankings page
+- CSV export matches persisted values exactly
 
 ---
 
 ### ⬜ Stage 10: Testing, Documentation & Polish
 
 **Status:** NOT STARTED  
-**Estimated Duration:** 30-45 minutes  
-**Prerequisite:** Stages 0-9 complete  
+**Prerequisite:** Stages 0-9 complete
 
 #### What Will Be Built
 
-1. **Unit Tests** (TDD; tests written before implementation)
-   - Job parser tests (Section 18.1)
-   - Resume parser tests (Section 18.1)
-   - Qualification scorer tests (Section 18.1)
-   - Experience scorer tests (Section 18.1)
-   - Responsibility scorer tests (Section 18.1)
-   - Weight normalizer tests (Section 18.1)
-
-2. **Integration Tests** (Section 18.2)
-   - Full path: paste → parse → confirm → upload → score → persist → export
-   - In-memory SQLite DB
-   - One corrupt file doesn't block batch
-   - Single shared vectorizer per run
-   - Injected DB failure leaves zero partial rows
-
-3. **Acceptance Tests** (Section 18.3)
-   - All 8 scenarios automated
-   - Results compared to expected_rankings.md
-   - Name-swap test (identical resume, different name → identical score)
-
-4. **Code Quality**
-   - Format with Black: `black .`
-   - Lint with Ruff: `ruff check .`
-   - Zero errors expected
-
-5. **Documentation**
-   - `README.md`:
-     - 1-sentence pitch
-     - Feature overview (5-7 bullets)
-     - Quick start (3 commands)
-     - Architecture diagram
-     - Testing strategy
-     - Tech stack table
-     - Link to SPECIFICATION.md
-     - Contributing guidelines
-   - Update `PROGRESS.md` (this file) to reflect final state
+1. **Unit tests** (Section 18.1): job parser, resume parser, qualification scorer, experience scorer, responsibility scorer, weight normalizer
+2. **Integration tests** (Section 18.2): full path paste → parse → confirm → upload → score → persist → export; in-memory SQLite; one corrupt file doesn't block the batch; single shared vectorizer per run; injected DB failure leaves zero partial rows
+3. **Acceptance tests** (Section 18.3): all 8 scenarios automated against `expected_rankings.md`, including the name-swap test
+4. **Code quality**: `black .`, `ruff check .`, zero errors expected
+5. **Documentation**: `README.md` (pitch, features, quick start, architecture, testing strategy, tech stack, Postgres switch guide, known limitations); this file updated to reflect final state
 
 #### Acceptance Criteria
 
-- ✅ All unit tests pass (Section 18.1 fixtures verified)
-- ✅ All integration tests pass (Section 18.2 flow verified)
-- ✅ All acceptance scenarios pass (Section 18.3 ground truth verified)
-- ✅ Ruff clean (zero linting errors)
-- ✅ Black clean (all code formatted)
-- ✅ README complete and professional
-- ✅ Definition of Done (SPECIFICATION.md Section 21) fully satisfied
+- All unit tests pass (Section 18.1 fixtures verified)
+- All integration tests pass (Section 18.2 flow verified)
+- All acceptance scenarios pass (Section 18.3 ground truth verified)
+- Ruff clean, Black clean
+- README complete and professional
+- Definition of Done (SPECIFICATION.md Section 21) fully satisfied
 
 ---
 
@@ -640,7 +373,7 @@ which python  # Mac/Linux
 where python  # Windows (PowerShell)
 ```
 
-Should point to `venv/` folder.
+Should point to the `venv/` folder.
 
 ---
 
@@ -653,14 +386,8 @@ ModuleNotFoundError: No module named 'streamlit'
 
 **Solution:**
 1. Verify venv is activated (should see `(venv)` prefix)
-2. Reinstall requirements:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Try again:
-   ```bash
-   streamlit run app.py
-   ```
+2. Reinstall requirements: `pip install -r requirements.txt`
+3. Try again: `streamlit run app.py`
 
 ---
 
@@ -672,10 +399,7 @@ ERROR [alembic.migration] Can't locate revision identified by 'abc123'
 ```
 
 **Solution:**
-1. Check current head:
-   ```bash
-   alembic current
-   ```
+1. Check current head: `alembic current`
 2. If needed, reset migrations:
    ```bash
    alembic downgrade base  # Go to empty DB
@@ -698,22 +422,32 @@ AssertionError: 94.29 != 94.3
 
 ---
 
-## Time Tracking
+### Issue: `git status` reports an in-progress rebase that was never intentionally started
 
-| Stage | Estimated | Actual | Status |
-|-------|-----------|--------|--------|
-| 0 | 10-20 min | ~50 min | ✅ COMPLETE |
-| 1 | 15-25 min | — | ⏳ PENDING |
-| 2 | 15-25 min | — | ⏳ PENDING |
-| 3 | 20-30 min | — | ⏳ PENDING |
-| 4 | 20-30 min | — | ⏳ PENDING |
-| 5 | 15-25 min | — | ⏳ PENDING |
-| 6 | 10-15 min | — | ⏳ PENDING |
-| 7 | 15-20 min | — | ⏳ PENDING |
-| 8 | 20-30 min | — | ⏳ PENDING |
-| 9 | 40-60 min | — | ⏳ PENDING |
-| 10 | 30-45 min | — | ⏳ PENDING |
-| **Total** | **3.5-5 hours** | **~50 min** | — |
+**Symptom:**
+```
+You are currently editing a commit while rebasing branch 'main' on '<hash>'.
+```
+
+**Solution:** Check `.git/rebase-merge/orig-head` before doing anything. If it points to a commit *behind* current `main` (i.e. real work has landed since), **do not run `git rebase --abort`** - it will hard-reset the branch back to that old commit. Instead remove the stale state directly: `rm -rf .git/rebase-merge` (and `.git/rebase-apply` if present). Confirm first that `.git/HEAD` reads `ref: refs/heads/main` (a normal branch ref, not a detached SHA) - if so, the rebase bookkeeping is orphaned and safe to delete.
+
+---
+
+## Stage Completion Status
+
+| Stage | Description | Status |
+|-------|-------------|--------|
+| 0 | Project Setup & Synthetic Data | ✅ COMPLETE |
+| 1 | Configuration & Taxonomies | ✅ COMPLETE |
+| 2 | Database & Ingestion Pipeline | ✅ COMPLETE |
+| 3 | Job Parser | ⬜ NOT STARTED |
+| 4 | Resume Parser & PII Stripping | ⬜ NOT STARTED |
+| 5 | Qualification Matcher & Scorer | ⬜ NOT STARTED |
+| 6 | Education Validator | ⬜ NOT STARTED |
+| 7 | Experience Scorer | ⬜ NOT STARTED |
+| 8 | Responsibility Scorer, Final Score & Persistence | ⬜ NOT STARTED |
+| 9 | Streamlit UI (5 Pages) | ⬜ NOT STARTED |
+| 10 | Testing, Documentation & Polish | ⬜ NOT STARTED |
 
 ---
 
@@ -727,32 +461,29 @@ AssertionError: 94.29 != 94.3
 | setup.sh | One-command environment setup | ✅ Ready |
 | sample_data/generate.py | Synthetic data generator | ✅ Ready |
 | sample_data/expected_rankings.md | Ground truth for acceptance tests | ✅ Ready |
-| config/settings.py | App configuration | ⏳ Stage 1 |
-| config/scoring.yaml | Scoring weights & config | ⏳ Stage 1 |
-| config/taxonomy/*.json | Skills, degrees, titles, etc. | ⏳ Stage 1 |
-| domain/schemas.py | Pydantic data models | ⏳ Stage 1 |
-| db/models.py | SQLAlchemy ORM models | ⏳ Stage 1 |
-| db/migrations/0001_initial_schema.py | Database schema migration | ⏳ Stage 1 |
-| parsing/job_parser.py | Job description parser | ⏳ Stage 3 |
-| parsing/resume_parser.py | Resume parser + PII stripping | ⏳ Stage 4 |
-| matching/scoring_engine.py | Scoring orchestration | ⏳ Stage 8 |
-| ui/pages/*.py | Streamlit pages (5 pages) | ⏳ Stage 9 |
-| tests/*.py | Unit/integration/acceptance tests | ⏳ Stage 10 |
-| README.md | User-facing documentation | ⏳ Stage 10 |
+| config/settings.py | App configuration | ✅ Ready |
+| config/scoring.yaml | Scoring weights & config | ✅ Ready |
+| config/taxonomy/*.json | Skills, degrees, titles, etc. | ✅ Ready |
+| domain/schemas.py | Pydantic data models | ✅ Ready |
+| db/models.py | SQLAlchemy ORM models | ✅ Ready |
+| db/migrations/versions/0001_initial_schema.py | Initial database schema | ✅ Ready |
+| db/migrations/versions/0002_*.py | Nullable resume parse columns | ✅ Ready |
+| ingestion/*.py | File validation, PDF/DOCX extraction, hashing | ✅ Ready |
+| services/candidate_service.py | Batch ingestion orchestration | ✅ Ready |
+| parsing/job_parser.py | Job description parser | ⬜ Stage 3 |
+| parsing/resume_parser.py | Resume parser + PII stripping | ⬜ Stage 4 |
+| matching/scoring_engine.py | Scoring orchestration | ⬜ Stage 8 |
+| ui/pages/*.py | Streamlit pages (5 pages) | ⬜ Stage 9 |
+| README.md | User-facing documentation | ⬜ Stage 10 |
 
 ---
 
 ## Next Steps
 
-1. ✅ **Verify Stage 0** is complete locally and on GitHub
-2. ⏳ **Start Stage 1** (Taxonomies & Configuration)
-   - Message to Claude Code provided
-   - Estimated duration: 15-25 minutes
-3. ⏳ **Continue through Stages 2-10** in order
-4. ✅ **Update this file** after each stage:
-   - Change status from `⏳ PENDING` to `✅ COMPLETE`
-   - Note actual duration
-   - Document any issues encountered
+1. ✅ Stages 0-2 complete and verified, locally and on GitHub
+2. ⬜ **Start Stage 3** (Job Parser)
+3. ⬜ Continue through Stages 4-10 in order
+4. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
 
@@ -771,26 +502,23 @@ AssertionError: 94.29 != 94.3
    git diff HEAD~1
    ```
 4. **Refer to SPECIFICATION.md** Section referenced in the failed test
-5. **Check troubleshooting section above** for common issues
-6. **Document the issue** in this file under "Known Issues & Resolutions" for future reference
+5. **Check the troubleshooting section above** for common issues
+6. **Document the issue** in this file under that stage's "Known Issues & Resolutions" for future reference
 
 ---
 
-## Checksum & Validation
+## Repository Snapshot
 
-**Generated:** August 4, 2026, 3:15 AM  
-**Stage 0 Commit Hash:** `0c40bc8` (latest)  
-**Total Commits:** 6 (initial setup + Stage 0)  
+**Latest commit:** `c881240` - "Stage 2: add candidate ingestion service with transactional persistence"  
+**Total commits:** 17  
 **Branch:** main  
-**Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)  
+**Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
-**File Validation:**
-- `requirements.txt`: 17 pinned dependencies
-- `sample_data/jobs/`: 6 .txt files
+**File validation:**
+- `requirements.txt`: 16 pinned dependencies
+- `sample_data/jobs/`: 6 `.txt` files
 - `sample_data/synthetic_resumes/`: 26 PDF/DOCX files
-- `sample_data/expected_rankings.md`: 3 job rankings + ground truth
-
----
-
-**Last Updated:** August 4, 2026, 3:15 AM  
-**Next Update:** After Stage 1 complete
+- `sample_data/expected_rankings.md`: ground truth for 3 jobs + full ingestion-status table
+- `config/taxonomy/`: 178 skills, 5 degree levels, 13 fields, 26 certifications, 26 titles, 35 phrase mappings
+- `db/models.py`: 13 ORM tables, 2 migrations applied
+- `tests/`: 42 tests passing (unit + integration)
