@@ -84,7 +84,9 @@ class JobRequirement(_StrictModel):
     @model_validator(mode="after")
     def _equivalent_years_requires_flag(self) -> "JobRequirement":
         if self.equivalent_years is not None and not self.allows_equivalent_experience:
-            raise ValueError("equivalent_years set without allows_equivalent_experience=True")
+            raise ValueError(
+                "equivalent_years set without allows_equivalent_experience=True"
+            )
         return self
 
 
@@ -158,7 +160,11 @@ class EmploymentRecord(_StrictModel):
 
     @model_validator(mode="after")
     def _end_before_start_is_invalid(self) -> "EmploymentRecord":
-        if self.start_date is not None and self.end_date is not None and self.end_date < self.start_date:
+        if (
+            self.start_date is not None
+            and self.end_date is not None
+            and self.end_date < self.start_date
+        ):
             raise ValueError("end_date must not be before start_date")
         return self
 
@@ -216,7 +222,9 @@ class MissingItem(_StrictModel):
 
 
 class ComponentResult(_StrictModel):
-    score: float | None = Field(default=None, ge=0.0, le=100.0)  # None = inapplicable, NOT zero
+    score: float | None = Field(
+        default=None, ge=0.0, le=100.0
+    )  # None = inapplicable, NOT zero
     evidence: list[MatchEvidence] = Field(default_factory=list)
     missing: list[MissingItem] = Field(default_factory=list)
     warnings: list[ScoringWarning] = Field(default_factory=list)

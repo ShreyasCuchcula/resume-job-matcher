@@ -16,13 +16,17 @@ from config.settings import get_app_config
 @lru_cache(maxsize=1)
 def get_engine() -> Engine:
     database_url = get_app_config().settings.database_url
-    connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
+    connect_args = (
+        {"check_same_thread": False} if database_url.startswith("sqlite") else {}
+    )
     return create_engine(database_url, connect_args=connect_args, future=True)
 
 
 @lru_cache(maxsize=1)
 def get_sessionmaker() -> sessionmaker[Session]:
-    return sessionmaker(bind=get_engine(), autoflush=False, expire_on_commit=False, future=True)
+    return sessionmaker(
+        bind=get_engine(), autoflush=False, expire_on_commit=False, future=True
+    )
 
 
 def get_session() -> Session:

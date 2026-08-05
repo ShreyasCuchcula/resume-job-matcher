@@ -130,11 +130,15 @@ def load_scoring_config(path: Path) -> ScoringConfig:
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
-        raise ValidationError(f"Scoring config at {path} is not valid YAML: {exc}") from exc
+        raise ValidationError(
+            f"Scoring config at {path} is not valid YAML: {exc}"
+        ) from exc
     try:
         return ScoringConfig.model_validate(raw)
     except PydanticValidationError as exc:
-        raise ValidationError(f"Scoring config at {path} failed validation:\n{exc}") from exc
+        raise ValidationError(
+            f"Scoring config at {path} failed validation:\n{exc}"
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +213,9 @@ def load_taxonomies(taxonomy_dir: Path) -> TaxonomyBundle:
     try:
         return TaxonomyBundle(version=version, **loaded)
     except PydanticValidationError as exc:
-        raise ValidationError(f"Taxonomy bundle at {taxonomy_dir} failed validation:\n{exc}") from exc
+        raise ValidationError(
+            f"Taxonomy bundle at {taxonomy_dir} failed validation:\n{exc}"
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +224,9 @@ def load_taxonomies(taxonomy_dir: Path) -> TaxonomyBundle:
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     database_url: str = "sqlite:///./resume_matcher.db"
     upload_dir: Path = Path("./uploads")

@@ -12,7 +12,13 @@ from typing import Literal
 RequirementType = Literal["skill", "education", "certification", "license"]
 
 EvidenceSection = Literal[
-    "skills", "experience", "project", "research", "summary", "education", "certification"
+    "skills",
+    "experience",
+    "project",
+    "research",
+    "summary",
+    "education",
+    "certification",
 ]
 
 RunStatus = Literal["active", "invalidated"]

@@ -155,8 +155,12 @@ class Resume(Base):
     file_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
-    parsed_json: Mapped[dict] = mapped_column(portable_json(), nullable=False)
-    parser_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    # Nullable: ingestion (Stage 2) persists a resume as soon as text is
+    # extracted, before resume_parser.py (Stage 3) exists to produce the
+    # full CandidateProfile these two columns describe. The parser fills
+    # them in via an UPDATE once it runs; see migration 0002.
+    parsed_json: Mapped[dict | None] = mapped_column(portable_json(), nullable=True)
+    parser_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
     uploaded_at: Mapped[datetime] = _created_at()
 
     candidate: Mapped["Candidate"] = relationship(back_populates="resumes")
