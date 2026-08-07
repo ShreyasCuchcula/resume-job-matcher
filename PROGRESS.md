@@ -1,7 +1,7 @@
 # Resume-Job-Matcher: Project Progress Tracker
 
 **Status:** In Development  
-**Current Checkpoint:** B in progress (Stages 0-7 Complete)
+**Current Checkpoint:** B Complete (Stages 0-8 Complete)
 
 ---
 
@@ -288,33 +288,28 @@ The similarity path (Section 13.2 path 2) needs a fitted `TfidfVectorizer`, a ba
 
 ---
 
-### ⬜ Stage 8: Responsibility Scorer & Final Score & Persistence
+### ✅ Stage 8: Responsibility Scorer & Final Score & Persistence
 
-**Status:** NOT STARTED  
-**Prerequisite:** Stages 0-7 complete
+**Status:** COMPLETE — Checkpoint B complete (Stages 3-8 done)
 
-#### What Will Be Built
+#### What Was Built
 
-- TF-IDF vectorizer (one per frozen batch)
-- Responsibility matching via cosine similarity
-- Dynamic weight normalization
-- Final score calculation
-- Scoring run persistence (SQLAlchemy + transactions)
-- Evidence persistence (match_evidence, missing_items, warnings)
+1. **`matching/responsibility_scorer.py`** (Section 12) - Section 12.3's exact `TfidfVectorizer` configuration (unfitted - the batch-level fit happens once, in `services/scoring_service.py`); per-responsibility best-bullet selection via cosine similarity with the 0.20 weak-match threshold; no responsibilities → inapplicable (`None`); responsibilities present but zero candidate bullets → a real `0.0` + `NO_EVIDENCE_BULLETS` warning. Every responsibility always lands in `evidence` (never `missing` - `MissingItem.requirement_id` has no responsibility-shaped analog). The pure formula is isolated into `responsibility_score_from_adjusted()` so the Section 12.5 fixture (bests 0.76/0.65/0.58 → 66.33) reproduces exactly.
+2. **`matching/weight_normalizer.py`** (Section 13.5) - `normalize_weights()`: inapplicable (`None`) components redistribute their weight; a real `0.0` keeps its weight; raises `UnscorableJobError` when every component is inapplicable.
+3. **`matching/scoring_engine.py`** extended with Section 14.1's full orchestration: `ScoringContext` (one fitted vectorizer + taxonomy + thresholds + weights + run date + version strings, shared by every candidate in a run), `assert_job_is_scorable()` (the `UnscorableJobError` check, done once per job rather than once per candidate, since every component's applicability depends only on the job's own fields), `final_score_from_components()`, `score_candidate()` (all four components → one `MatchResult`), and `rank_match_results()` (Section 13.6 tie-break: final↓, required↓, responsibility↓, display_identifier↑).
+4. **`services/scoring_service.py`** (Section 14.2) - `run_scoring_batch()`: raises `UnscorableJobError` before touching the database if the job can never be scored; fits exactly one `TfidfVectorizer` on the full batch corpus (every job responsibility + every candidate's evidence bullets) and reuses that instance for every candidate; persists `scoring_runs` + every candidate's `match_results`/`match_evidence`/`missing_items`/`scoring_warnings` in a single transaction, rolling back everything on any failure.
 
-#### Acceptance Criteria
+#### Known Issues & Resolutions
 
-- Fixture: responsibility_score = 66.33 reproduced exactly
-- Fixture: final_score = 83.17 reproduced exactly
-- Fixture: applied_weights = {required: 0.5294, experience: 0.2353, responsibility: 0.2353} when preferred is absent
-- Weights always sum to 1.0 ± 1e-9
-- All four components present → defaults unchanged
-- Preferred absent → redistribute across the other three (Section 13.5 formula)
-- All-`None` → UnscorableJobError
-- One TF-IDF vectorizer per run (asserted by object identity)
-- Full run persistence in one transaction; any failure rolls back the entire run
-- Re-runs on same data produce bit-identical results
-- All tests from SPECIFICATION.md Section 18.1 & 18.2 pass
+1. **The Section 13.6 worked fixture (83.17) contradicts the spec's own inline formula comment.** `final = Σ(component_score × normalized_weight)  # rounded to 2 dp` reads as a single rounding step after summing - but `94.29×0.45 + 83.33×0.20 + 66.33×0.20 + 72.00×0.15` sums to `83.1625`, which rounds to `83.16`, not `83.17`. Verified directly in Python (not just by hand) that only rounding each component's weighted contribution to 2dp *before* summing reproduces `83.17` exactly. Implemented the per-term-rounding interpretation, since the ACCEPTANCE CRITERIA explicitly demanded the fixture reproduce "to the digit" - documented the discrepancy directly in `final_score_from_components()`'s docstring and in a dedicated test that computes both interpretations side by side.
+2. **`MissingItem.requirement_id` is a non-nullable UUID with no responsibility-shaped equivalent**, so a job responsibility with zero matching evidence can't be represented as a "missing" item the way an unmet skill/education/certification requirement can. Resolved per `MatchEvidence.requirement_id`'s own schema comment ("None for responsibility matches"): every responsibility always produces a `MatchEvidence` entry (with `adjusted_strength=0.0` and an explicit no-match placeholder when there are literally no bullets to compare against), never a `MissingItem`.
+3. **Persisting `match_evidence`/`missing_items` rows for the first time in this project surfaced real foreign-key requirements**: `job.job_id` and every `JobRequirement.requirement_id`/`JobResponsibility.responsibility_id` must match already-persisted rows (not a freshly re-parsed `JobProfile` with new random UUIDs), and this is now genuinely enforced at the SQLite level thanks to the pre-Stage-9 FK-pragma fix. Documented explicitly as a caller contract in `scoring_service.py`'s module docstring; a full "reconstruct `JobProfile`/`CandidateProfile` from persisted rows" loader is Stage 9 UI-wiring territory, not built here - integration tests build a test-local equivalent to exercise the real persistence path with valid FKs.
+
+#### Verification
+
+553 tests total, all passing; `ruff check .` clean. Both Section 18.1 fixtures this stage covers reproduce exactly (66.33 responsibility, 83.17 final). The Section 13.5 weight-redistribution fixture (preferred absent → 0.5294/0.2353/0.2353) reproduces exactly, alongside experience-absent and responsibility-absent redistribution and the all-`None` → `UnscorableJobError` case. `services/scoring_service.py` verified against the real in-memory SQLite `db_session` fixture with real job/resume data: one vectorizer built per batch regardless of candidate count (spied, not assumed), a simulated DB failure mid-batch leaves zero `scoring_runs`/`match_results`/`match_evidence` rows, and every persisted row's foreign keys are real (FK enforcement genuinely active). Full-pipeline integration tests run every real job against every real parseable resume (no crashes, every final score in `[0,100]`, weights always sum to 1.0) plus targeted acceptance coverage against `expected_rankings.md`: Job 1's five-candidate ranking order matches exactly via the real tie-break-capable ranking function; Job 2's absent preferred section and Job 4's absent experience minimum both correctly redistribute weight; and the Section 9.4 name-swap invariant now holds all the way through the final weighted score, not just individual components.
+
+**Checkpoint B (Stages 3-8, "Parsers & Scoring Brain") is complete**: job and resume parsing, all four scoring components, dynamic weight normalization, the final score formula, and full transactional persistence all work together end to end against real synthetic data.
 
 ---
 
@@ -479,7 +474,7 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | 5 | Qualification Matcher & Scorer | ✅ COMPLETE |
 | 6 | Education Validator | ✅ COMPLETE |
 | 7 | Experience Scorer | ✅ COMPLETE |
-| 8 | Responsibility Scorer, Final Score & Persistence | ⬜ NOT STARTED |
+| 8 | Responsibility Scorer, Final Score & Persistence | ✅ COMPLETE |
 | 9 | Streamlit UI (5 Pages) | ⬜ NOT STARTED |
 | 10 | Testing, Documentation & Polish | ⬜ NOT STARTED |
 
@@ -514,7 +509,10 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | parsing/pii.py, employment_extractor.py, normalization/dates.py, normalization/titles.py | Resume parser support modules | ✅ Ready |
 | matching/qualification_matcher.py | Skill/education/certification matching + scoring formula | ✅ Ready |
 | matching/experience_scorer.py | Relevant-years calculation + experience component (Section 13) | ✅ Ready |
-| matching/scoring_engine.py | Required/preferred/experience scoring orchestration | ✅ Ready (responsibility/final score: Stage 8) |
+| matching/responsibility_scorer.py | TF-IDF/cosine responsibility similarity (Section 12) | ✅ Ready |
+| matching/weight_normalizer.py | Dynamic weight redistribution (Section 13.5) | ✅ Ready |
+| matching/scoring_engine.py | Full per-candidate orchestration: all 4 components + final score + ranking | ✅ Ready |
+| services/scoring_service.py | Batch scoring run orchestration + transactional persistence (Section 14.2) | ✅ Ready |
 | ui/pages/*.py | Streamlit pages (5 pages) | ⬜ Stage 9 |
 | README.md | User-facing documentation | ⬜ Stage 10 |
 
@@ -522,10 +520,10 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Next Steps
 
-1. ✅ Stages 0-7 complete and verified, locally and on GitHub
+1. ✅ Stages 0-8 complete and verified, locally and on GitHub - **Checkpoint B complete**
 2. ✅ Pre-Stage-9 Company/job-lifecycle infrastructure complete and verified (see dedicated section above) - not a numbered stage
-3. ⬜ **Start Stage 8** (Responsibility Scorer & Final Score & Persistence)
-4. ⬜ Continue through Stages 9-10 in order
+3. ⬜ **Start Stage 9** (Streamlit UI, 5 pages)
+4. ⬜ Continue through Stage 10
 5. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
@@ -552,8 +550,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Repository Snapshot
 
-**Latest commit:** `aee11ba` - "Update job_service.py to require company_id on job creation"  
-**Total commits:** 50  
+**Latest commit:** `f9a724a` - "Verify full scoring pipeline against real data and ground truth (Stage 8)"  
+**Total commits:** 56  
 **Branch:** main  
 **Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
@@ -566,6 +564,7 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 - `db/models.py`: 14 ORM tables (13 from Section 6.1 + `companies`, pre-Stage-9), 4 migrations applied
 - `parsing/`: job description parser (Section 10) and resume parser (Section 9) both complete, across 12 modules
 - `normalization/`: dates.py, titles.py
-- `matching/`: qualification_matcher.py (skill/education/certification matching + Section 11.1 scoring formula), experience_scorer.py (Section 13 relevant-years + formula), scoring_engine.py (required/preferred/experience orchestration)
-- `db/repositories.py`, `services/job_service.py`: pre-Stage-9 Company/job-lifecycle persistence
-- `tests/`: 508 tests passing (unit + integration)
+- `matching/`: qualification_matcher.py, experience_scorer.py, responsibility_scorer.py, weight_normalizer.py, scoring_engine.py - all four Section 11-13 scoring components plus full Section 14.1 per-candidate orchestration and ranking
+- `services/`: candidate_service.py, job_service.py, scoring_service.py - ingestion, job persistence, and full transactional batch-scoring orchestration (Section 14.2)
+- `db/repositories.py`: pre-Stage-9 Company persistence helpers
+- `tests/`: 553 tests passing (unit + integration)
