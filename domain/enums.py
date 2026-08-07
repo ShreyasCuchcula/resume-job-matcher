@@ -23,6 +23,11 @@ EvidenceSection = Literal[
 
 RunStatus = Literal["active", "invalidated"]
 
+# Post-Stage-7 addendum (pre-Stage-9 infrastructure, not in the
+# original 10-stage plan - see SPECIFICATION.md Section 6.3): a job's
+# lifecycle status once persisted, independent of `JobProfile.confirmed`.
+JobStatus = Literal["open", "closed", "archived"]
+
 FileStatus = Literal[
     "accepted",
     "duplicate",

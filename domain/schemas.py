@@ -17,7 +17,7 @@ invariants listed at the end of Section 5:
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -25,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from domain.enums import (
     EmploymentSectionType,
     EvidenceSection,
+    JobStatus,
     MissingItemStatus,
     RequirementType,
 )
@@ -59,6 +60,25 @@ class ScoringWarning(_StrictModel):
 # ---------------------------------------------------------------------------
 # Job side
 # ---------------------------------------------------------------------------
+
+
+class Company(_StrictModel):
+    """Post-Stage-7 addendum (pre-Stage-9 infrastructure, not in the
+    original 10-stage plan - see SPECIFICATION.md Section 6.3): lets
+    jobs be grouped by the recruiting organization they belong to."""
+
+    id: UUID = Field(default_factory=uuid4)
+    name: str
+    industry: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    @field_validator("name")
+    @classmethod
+    def _name_non_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("name must not be empty")
+        return value
 
 
 class JobRequirement(_StrictModel):
@@ -108,6 +128,15 @@ class JobProfile(_StrictModel):
     warnings: list[ParsingWarning] = Field(default_factory=list)
     parser_version: str
     confirmed: bool = False
+    # Post-Stage-7 addendum (pre-Stage-9 infrastructure, not in the
+    # original 10-stage plan - see SPECIFICATION.md Section 6.3):
+    # company_id is optional here since a parsed-but-not-yet-persisted
+    # JobProfile has no company relationship yet - the persistence
+    # layer (services/job_service.py) is what requires one before a
+    # Job row is ever created.
+    company_id: UUID | None = None
+    status: JobStatus = "open"
+    expires_at: datetime | None = None
 
 
 # ---------------------------------------------------------------------------
