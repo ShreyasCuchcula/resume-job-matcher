@@ -6,16 +6,32 @@ targets both engines; only `DATABASE_URL` changes.
 
 from __future__ import annotations
 
+import sqlite3
 import uuid
 
-from sqlalchemy import CHAR, JSON, TypeDecorator
+from sqlalchemy import CHAR, JSON, TypeDecorator, event
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
     pass
+
+
+@event.listens_for(Engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, connection_record) -> None:
+    """SQLite ships `PRAGMA foreign_keys` OFF by default, per
+    connection - every `ON DELETE CASCADE`/`ON DELETE SET NULL` FK
+    declared in db/models.py (Section 6.2/6.3) is silently a no-op on
+    SQLite without this. PostgreSQL always enforces FK actions and has
+    no equivalent pragma, so this only fires for actual sqlite3
+    connections, never for psycopg2 ones."""
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 class GUID(TypeDecorator):

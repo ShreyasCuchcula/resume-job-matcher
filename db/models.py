@@ -1,11 +1,14 @@
-"""SQLAlchemy 2.x ORM models for all 13 tables (SPECIFICATION.md
-Section 6.1). Engine-agnostic: GUID and JSON columns adapt between
-SQLite (dev/test) and PostgreSQL (Section 3.3) via db/base.py.
+"""SQLAlchemy 2.x ORM models for all 14 tables (SPECIFICATION.md
+Section 6.1; `companies` is a post-Stage-7 addendum documented in
+Section 6.3, not part of the original 13-table/10-stage plan).
+Engine-agnostic: GUID and JSON columns adapt between SQLite (dev/test)
+and PostgreSQL (Section 3.3) via db/base.py.
 
 Cascade behavior follows Section 6.2/17.2: deleting a candidate or a
 job cascades through every row that exists only in service of it
 (qualifications, bullets, resumes, requirements, responsibilities,
-scoring runs and everything a run produced).
+scoring runs and everything a run produced). Deleting a company
+cascades to its jobs the same way (Section 6.3).
 """
 
 from __future__ import annotations
@@ -53,8 +56,36 @@ def _created_at() -> Mapped[datetime]:
 # ---------------------------------------------------------------------------
 
 
+class Company(Base):
+    """Post-Stage-7 addendum (pre-Stage-9 infrastructure, not part of
+    the original 10-stage plan - SPECIFICATION.md Section 6.3): groups
+    jobs by the recruiting organization they belong to."""
+
+    __tablename__ = "companies"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    industry: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = _created_at()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    jobs: Mapped[list["Job"]] = relationship(
+        back_populates="company", cascade="all, delete-orphan", passive_deletes=True
+    )
+
+
 class Job(Base):
     __tablename__ = "jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('open', 'closed', 'archived')", name="ck_jobs_status"
+        ),
+    )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -63,7 +94,19 @@ class Job(Base):
     confirmed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     parser_version: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = _created_at()
+    # Post-Stage-7 addendum (pre-Stage-9 infrastructure, not part of
+    # the original 10-stage plan - SPECIFICATION.md Section 6.3):
+    # company_id is nullable at the DB layer only for pre-migration
+    # rows; services/job_service.py requires one on every new job.
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("companies.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="open")
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
+    company: Mapped["Company | None"] = relationship(back_populates="jobs")
     requirements: Mapped[list["JobRequirement"]] = relationship(
         back_populates="job", cascade="all, delete-orphan", passive_deletes=True
     )
