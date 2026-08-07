@@ -92,7 +92,11 @@ class Job(Base):
     raw_description: Mapped[str] = mapped_column(Text, nullable=False)
     minimum_relevant_years: Mapped[float | None] = mapped_column(_SCORE, nullable=True)
     confirmed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    parser_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    # Nullable (migration 0004, mirroring resumes.parser_version's own
+    # nullability from migration 0002): services/job_service.py's
+    # create_job() persists a Job row before parse_job_description()
+    # has run, so there's no real version string yet at creation time.
+    parser_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = _created_at()
     # Post-Stage-7 addendum (pre-Stage-9 infrastructure, not part of
     # the original 10-stage plan - SPECIFICATION.md Section 6.3):
