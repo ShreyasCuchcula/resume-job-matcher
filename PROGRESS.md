@@ -262,6 +262,32 @@ The similarity path (Section 13.2 path 2) needs a fitted `TfidfVectorizer`, a ba
 
 ---
 
+## Pre-Stage 9 Infrastructure: Company & Job Lifecycle
+
+**Status:** COMPLETE
+
+**Not one of the 10 numbered stages.** A focused database/service-layer expansion requested and confirmed explicitly by the project owner as a deliberate scope addition ahead of Stage 9, documented as a deviation in `SPECIFICATION.md` Section 6.3 rather than folded silently into the existing spec. Does not touch `parsing/` or `matching/` - every Stage 3-7 test still passes unchanged.
+
+#### What Was Built
+
+1. **`domain/enums.py` / `domain/schemas.py`** - `JobStatus` enum; a new `Company` model; `JobProfile` gains `company_id` / `status` / `expires_at`, all defaulted so every existing caller is unaffected.
+2. **Migrations `0003` and `0004`** (`db/migrations/versions/`) - `0003` adds the `companies` table and `jobs.company_id` / `status` / `expires_at`; `0004` makes `jobs.parser_version` nullable, mirroring `resumes.parser_version`'s existing nullable-until-parsed pattern from migration `0002`, since job creation now happens before parsing (see `services/job_service.py` below). Verified with a real `alembic upgrade head` / `downgrade -1` round-trip against a scratch SQLite database (schema inspected via `PRAGMA` before and after), plus the new DDL compiled cleanly against the PostgreSQL dialect (no live Postgres server available in this environment).
+3. **`db/models.py`** - `Company` ORM model with a cascading relationship to `Job`; `Job` gains the three new columns plus a `CHECK` constraint on `status` matching every other enum-like column's existing convention in this file.
+4. **`db/repositories.py`** - created for the first time (documented in the project's file layout since the start but never built, since no earlier stage needed job-level DB persistence): `get_company_by_id`, `get_jobs_by_company`, `create_company`.
+5. **`services/job_service.py`** - created for the first time (same situation as `db/repositories.py`): `create_job` (requires an existing `company_id`), `parse_and_persist_job`, `confirm_job`, `update_job_status`. `invalidate` is deliberately not implemented - it depends on `scoring_runs` persistence, which doesn't exist until Stage 8.
+
+#### Known Issues & Resolutions
+
+1. **The request that kicked off this work asked me not to verify it against the authoritative specification, and referenced a `services/job_service.py` file to "modify" that did not exist in the repository.** Paused before making any changes, checked both claims directly against the repo and against `SPECIFICATION.md` (no company/job-lifecycle concept exists anywhere in the spec; `services/` contained only `candidate_service.py`), and surfaced the discrepancy before proceeding rather than executing silently. Confirmed explicitly as genuinely wanted, with the fix being: document the deviation in the spec instead of hiding it, build the referenced file for real instead of assuming it existed, and verify normally instead of skipping it.
+2. **A previously-unnoticed bug surfaced by testing the new cascade relationship**: SQLite ships `PRAGMA foreign_keys` OFF per connection by default, so every `ON DELETE CASCADE` / `ON DELETE SET NULL` constraint declared anywhere in `db/models.py` - not just the new `companies` one - has been silently a no-op on SQLite since Stage 1; deleting a parent row left every child row orphaned instead of cascading. Fixed once, globally, in `db/base.py` via a SQLAlchemy connect-event listener scoped to real `sqlite3.Connection` objects only (PostgreSQL is unaffected). Full suite re-verified green after the fix; nothing depended on the previously-broken behavior.
+3. **`jobs.parser_version` was `NOT NULL`, but `create_job()` must persist a row before parsing has run.** Rather than write a fake placeholder version string, added migration `0004` to make it nullable - the identical fix already established for `resumes.parser_version` in migration `0002`, for the identical reason.
+
+#### Verification
+
+508 tests total, all passing; `ruff check .` clean. Every Stage 3-7 test unchanged and still green. Migration chain `0001` through `0004` round-trips cleanly on SQLite; new DDL compiles cleanly against the PostgreSQL dialect.
+
+---
+
 ### ⬜ Stage 8: Responsibility Scorer & Final Score & Persistence
 
 **Status:** NOT STARTED  
@@ -476,8 +502,12 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 | db/models.py | SQLAlchemy ORM models | ✅ Ready |
 | db/migrations/versions/0001_initial_schema.py | Initial database schema | ✅ Ready |
 | db/migrations/versions/0002_*.py | Nullable resume parse columns | ✅ Ready |
+| db/migrations/versions/0003_*.py | Companies table + job lifecycle fields (pre-Stage-9) | ✅ Ready |
+| db/migrations/versions/0004_*.py | Nullable jobs.parser_version (pre-Stage-9) | ✅ Ready |
+| db/repositories.py | Company query/persist helpers (pre-Stage-9) | ✅ Ready |
 | ingestion/*.py | File validation, PDF/DOCX extraction, hashing | ✅ Ready |
 | services/candidate_service.py | Batch ingestion orchestration | ✅ Ready |
+| services/job_service.py | Job create/parse/confirm/status persistence (pre-Stage-9) | ✅ Ready |
 | parsing/job_parser.py | Job description parser | ✅ Ready |
 | parsing/section_detector.py, skill_extractor.py, education_extractor.py, certification_extractor.py, requirement_extractor.py, responsibility_extractor.py, common.py | Job parser support modules | ✅ Ready |
 | parsing/resume_parser.py | Resume parser + PII stripping | ✅ Ready |
@@ -493,9 +523,10 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 ## Next Steps
 
 1. ✅ Stages 0-7 complete and verified, locally and on GitHub
-2. ⬜ **Start Stage 8** (Responsibility Scorer & Final Score & Persistence)
-3. ⬜ Continue through Stages 9-10 in order
-4. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
+2. ✅ Pre-Stage-9 Company/job-lifecycle infrastructure complete and verified (see dedicated section above) - not a numbered stage
+3. ⬜ **Start Stage 8** (Responsibility Scorer & Final Score & Persistence)
+4. ⬜ Continue through Stages 9-10 in order
+5. Update this file after each stage: flip status to `✅ COMPLETE`, document any issues encountered, keep the Stage Completion Status table current
 
 ---
 
@@ -521,8 +552,8 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 
 ## Repository Snapshot
 
-**Latest commit:** `81a008b` - "Verify experience scoring against real jobs, resumes, and ground truth (Stage 7)"  
-**Total commits:** 43  
+**Latest commit:** `aee11ba` - "Update job_service.py to require company_id on job creation"  
+**Total commits:** 50  
 **Branch:** main  
 **Remote:** origin (https://github.com/ShreyasCuchcula/resume-job-matcher.git)
 
@@ -532,8 +563,9 @@ You are currently editing a commit while rebasing branch 'main' on '<hash>'.
 - `sample_data/synthetic_resumes/`: 26 PDF/DOCX files
 - `sample_data/expected_rankings.md`: ground truth for 3 jobs + full ingestion-status table
 - `config/taxonomy/`: 178 skills, 5 degree levels, 13 fields, 26 certifications, 26 titles, 35 phrase mappings
-- `db/models.py`: 13 ORM tables, 2 migrations applied
+- `db/models.py`: 14 ORM tables (13 from Section 6.1 + `companies`, pre-Stage-9), 4 migrations applied
 - `parsing/`: job description parser (Section 10) and resume parser (Section 9) both complete, across 12 modules
 - `normalization/`: dates.py, titles.py
 - `matching/`: qualification_matcher.py (skill/education/certification matching + Section 11.1 scoring formula), experience_scorer.py (Section 13 relevant-years + formula), scoring_engine.py (required/preferred/experience orchestration)
-- `tests/`: 476 tests passing (unit + integration)
+- `db/repositories.py`, `services/job_service.py`: pre-Stage-9 Company/job-lifecycle persistence
+- `tests/`: 508 tests passing (unit + integration)

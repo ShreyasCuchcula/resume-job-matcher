@@ -282,6 +282,7 @@ EvidenceSection = Literal["skills", "experience", "project", "research",
 RunStatus       = Literal["active", "invalidated"]
 FileStatus      = Literal["accepted", "duplicate", "unsupported", "corrupt",
                           "probable_scan", "parsed_with_warnings", "failed"]
+JobStatus       = Literal["open", "closed", "archived"]  # post-Stage-7 addendum, see 6.3
 
 # --- shared ---
 class ParsingWarning(BaseModel):
@@ -295,6 +296,16 @@ class ScoringWarning(BaseModel):
     related_requirement_id: UUID | None = None
 
 # --- job side ---
+
+# Post-Stage-7 addendum (pre-Stage-9 infrastructure, not part of the
+# original 10-stage plan - see Section 6.3 for the full rationale).
+class Company(BaseModel):
+    id: UUID
+    name: str                            # non-empty, unique
+    industry: str | None = None          # recruiter-entered or left blank
+    created_at: datetime
+    updated_at: datetime
+
 class JobRequirement(BaseModel):
     requirement_id: UUID
     type: RequirementType
@@ -325,6 +336,11 @@ class JobProfile(BaseModel):
     warnings: list[ParsingWarning]
     parser_version: str
     confirmed: bool = False
+    # Post-Stage-7 addendum (see 6.3): optional here since a parsed-
+    # but-not-yet-persisted JobProfile has no company relationship yet.
+    company_id: UUID | None = None
+    status: JobStatus = "open"
+    expires_at: datetime | None = None
 
 # --- candidate side ---
 class CandidateQualification(BaseModel):
@@ -442,8 +458,11 @@ class MatchResult(BaseModel):
 | raw_description | TEXT | Original pasted text |
 | minimum_relevant_years | NUMERIC NULL | Explicit statements only |
 | confirmed | BOOLEAN default false | Frozen when true |
-| parser_version | VARCHAR | |
+| parser_version | VARCHAR NULL | NULL until `parse_and_persist_job()` runs (migration 0004) |
 | created_at | TIMESTAMPTZ | |
+| company_id | GUID FK companies, NULL | Post-Stage-7 addendum, see 6.3 |
+| status | VARCHAR(20) default 'open' | `open` \| `closed` \| `archived` - post-Stage-7 addendum, see 6.3 |
+| expires_at | TIMESTAMPTZ NULL | Post-Stage-7 addendum, see 6.3 |
 
 **`job_requirements`** — id GUID PK; job_id FK; requirement_type VARCHAR; canonical_name VARCHAR; original_text TEXT; importance SMALLINT (CHECK 1–3); confidence NUMERIC (CHECK 0–1); is_required BOOLEAN; allows_equivalent_experience BOOLEAN; equivalent_years NUMERIC NULL; degree_level VARCHAR NULL; field_of_study VARCHAR NULL.
 
@@ -487,6 +506,28 @@ class MatchResult(BaseModel):
 - Re-scoring always creates a **new** run (new vectorizer fit). Old runs remain readable for reproducibility.
 - All per-run writes (results + evidence + missing + warnings) commit in **one transaction**; any failure rolls back the entire run so no partial results exist.
 - A persisted score without its evidence rows is treated as corrupt by the UI.
+
+### 6.3 Addendum — Company & job lifecycle (added after Stage 7, pre-Stage 9)
+
+**Not part of the original 10-stage delivery plan.** Section 1.3's "recruiter pastes one job description" flow and the Section 15 UI spec are unchanged for the Stage 9 MVP — this is additive persistence infrastructure only, added ahead of Stage 9 so its UI has a company/job-lifecycle layer to build on if it needs one. Requested and confirmed explicitly by the project owner as a deliberate scope addition, outside the numbered-stage sequence; documented here rather than silently folded into Section 5/6.1 so the schema stays authoritative for every later stage and this deviation is traceable.
+
+**`companies`**
+
+| Column | Type | Notes |
+|---|---|---|
+| id | GUID PK | |
+| name | VARCHAR(255) UNIQUE NOT NULL | |
+| industry | VARCHAR(255) NULL | Recruiter-entered or left blank |
+| created_at | TIMESTAMPTZ | |
+| updated_at | TIMESTAMPTZ | |
+
+Deleting a company cascades to delete its jobs (and, transitively, everything 6.2 already cascades from a job). `jobs.company_id` is nullable at the DB layer only for pre-migration rows; `services/job_service.create_job()` requires an existing `company_id` on every new job.
+
+`services/job_service.py` (Section 4's documented but previously unbuilt file) implements `create_job` / `parse_and_persist_job` / `confirm_job` / `update_job_status`. It deliberately does **not** implement `invalidate` — Section 6.2's invalidate-on-edit rule depends on `scoring_runs` persistence, which is Stage 8 work and doesn't exist yet.
+
+`db/repositories.py` (also Section 4's documented but previously unbuilt file) gained its first functions here: `get_company_by_id`, `get_jobs_by_company`, `create_company`.
+
+**Unrelated fix surfaced while testing this addendum:** SQLite ships `PRAGMA foreign_keys` OFF per connection by default, so every `ON DELETE CASCADE`/`ON DELETE SET NULL` constraint declared anywhere in `db/models.py` (not just the new `companies` one) was silently a no-op on SQLite since Stage 1 — deleting a parent row left every child row orphaned instead of cascading. Fixed once, globally, in `db/base.py` via a SQLAlchemy connect-event listener scoped to actual `sqlite3.Connection` objects (PostgreSQL connections are unaffected and have no equivalent pragma).
 
 ---
 
